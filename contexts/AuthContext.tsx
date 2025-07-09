@@ -1,4 +1,4 @@
-import { apiService } from "@/apis/api";
+import { authService } from "@/apis/auth";
 import {
   LoginRequest,
   RegisterRequest,
@@ -71,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       console.log("Attempting login with credentials:", credentials);
 
-      const response = await apiService.login(credentials);
+      const response = await authService.login(credentials);
       console.log("Login response:", response);
 
       // Handle the actual API response structure
@@ -100,7 +100,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (error) {
       console.error("Error during login:", error);
-      // Don't set isLoading to false here - let the finally block handle it
       throw error;
     }
   };
@@ -109,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       console.log("Attempting registration with data:", userData);
 
-      const response = await apiService.register(userData);
+      const response = await authService.register(userData);
       console.log("Registration response:", response);
 
       if (
@@ -117,7 +116,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         response.message === "User registered successfully"
       ) {
         console.log("Registration successful! User can now login.");
-        // Don't auto-login, let user go to login page
         return;
       } else {
         throw new Error(response.message || "Registration failed");
@@ -135,10 +133,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsLoading(true);
       console.log("Verifying forgot password OTP:", data);
 
-      const response = await apiService.verifyForgotPassword(data);
+      const response = await authService.verifyForgotPassword(data);
       console.log("Verify forgot password response:", response);
-
-      // Check if response has success property, otherwise check message
       if (
         response.success ||
         response.message === "OTP verified successfully"
@@ -159,8 +155,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = async () => {
     try {
       setIsLoading(true);
-
-      // Remove both access_token and refresh_token along with user data
       await AsyncStorage.multiRemove([
         "auth_token",
         "refresh_token",
@@ -170,7 +164,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Clear user state
       setUser(null);
 
-      // Navigate to login page
       router.replace("/auth/login");
 
       console.log("Logout successful - tokens cleared and redirected to login");

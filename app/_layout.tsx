@@ -22,7 +22,6 @@ export default function RootLayout() {
   });
 
   if (!loaded) {
-    // Async font loading only occurs in development.
     return null;
   }
 
@@ -50,13 +49,8 @@ export default function RootLayout() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen name="home" options={{ headerShown: false }} />
-                <Stack.Screen name="health" options={{ headerShown: false }} />
                 <Stack.Screen
                   name="calendar"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="analysis"
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen name="explore" options={{ headerShown: false }} />

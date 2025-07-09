@@ -2,13 +2,16 @@ import React from "react";
 import { View, TouchableOpacity, Text, Animated } from "react-native";
 import { router, usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 
 const TabIcon = ({
-  icon,
+  iconName,
+  iconFamily,
   name,
   focused,
 }: {
-  icon: string;
+  iconName: string;
+  iconFamily: "Ionicons" | "MaterialIcons" | "FontAwesome5";
   name: string;
   focused: boolean;
 }) => {
@@ -32,6 +35,25 @@ const TabIcon = ({
     ]).start();
   }, [focused, scale, translateY]);
 
+  const getIconComponent = () => {
+    const iconProps = {
+      name: iconName as any,
+      size: 20,
+      color: focused ? "#ffffff" : "#6b7280",
+    };
+
+    switch (iconFamily) {
+      case "Ionicons":
+        return <Ionicons {...iconProps} />;
+      case "MaterialIcons":
+        return <MaterialIcons {...iconProps} />;
+      case "FontAwesome5":
+        return <FontAwesome5 {...iconProps} />;
+      default:
+        return <Ionicons {...iconProps} />;
+    }
+  };
+
   return (
     <View className="items-center justify-center flex-1">
       <Animated.View
@@ -45,9 +67,7 @@ const TabIcon = ({
             focused ? "bg-pink-500" : "bg-transparent"
           }`}
         >
-          <Text className={`text-lg ${focused ? "" : "opacity-70"}`}>
-            {icon}
-          </Text>
+          {getIconComponent()}
         </View>
         <Text
           className={`text-xs font-medium ${
@@ -68,37 +88,43 @@ export default function BottomTabs() {
   const tabs = [
     {
       name: "Home",
-      icon: "🏠",
+      iconName: "home",
+      iconFamily: "Ionicons" as const,
       route: "/",
       isActive: pathname === "/" || pathname.includes("/(tabs)"),
     },
     {
       name: "Calendar",
-      icon: "🗓️",
+      iconName: "calendar",
+      iconFamily: "Ionicons" as const,
       route: "/(tabs)/calendar",
       isActive: pathname.includes("/calendar"),
     },
     {
-      name: "Analysis",
-      icon: "📊",
-      route: "/(tabs)/analysis",
-      isActive: pathname.includes("/analysis"),
+      name: "Blog",
+      iconName: "library",
+      iconFamily: "Ionicons" as const,
+      route: "/(tabs)/blog",
+      isActive: pathname.includes("/blog"),
     },
     {
-      name: "Health",
-      icon: "❤️",
-      route: "/(tabs)/health",
-      isActive: pathname.includes("/health"),
+      name: "Forum",
+      iconName: "forum",
+      iconFamily: "MaterialIcons" as const,
+      route: "/(tabs)/forum",
+      isActive: pathname.includes("/forum"),
     },
     {
-      name: "Explore",
-      icon: "🔍",
-      route: "/(tabs)/explore",
-      isActive: pathname.includes("/explore"),
+      name: "Test",
+      iconName: "flask",
+      iconFamily: "FontAwesome5" as const,
+      route: "/(tabs)/test",
+      isActive: pathname.includes("/test"),
     },
     {
       name: "Profile",
-      icon: "👤",
+      iconName: "person",
+      iconFamily: "Ionicons" as const,
       route: "/(tabs)/profile",
       isActive: pathname.includes("/profile"),
     },
@@ -123,7 +149,12 @@ export default function BottomTabs() {
           onPress={() => router.push(tab.route as any)}
           className="flex-1"
         >
-          <TabIcon icon={tab.icon} name={tab.name} focused={tab.isActive} />
+          <TabIcon
+            iconName={tab.iconName}
+            iconFamily={tab.iconFamily}
+            name={tab.name}
+            focused={tab.isActive}
+          />
         </TouchableOpacity>
       ))}
     </View>

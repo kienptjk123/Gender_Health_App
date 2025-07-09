@@ -1,4 +1,4 @@
-import { apiService } from "@/apis/api";
+import { authService } from "@/apis/auth";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -32,7 +32,9 @@ export default function ForgotPassword() {
       setLoading(true);
       console.log("Sending OTP for email:", email.trim());
 
-      const response = await apiService.forgotPassword({ email: email.trim() });
+      const response = await authService.forgotPassword({
+        email: email.trim(),
+      });
       console.log("Forgot password response:", response);
       console.log("Response type:", typeof response);
       console.log("Response success:", response.success);

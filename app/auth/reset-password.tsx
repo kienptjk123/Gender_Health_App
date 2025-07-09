@@ -1,4 +1,4 @@
-import { apiService } from "@/apis/api";
+import { authService } from "@/apis/auth";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -42,7 +42,7 @@ export default function ResetPassword() {
     try {
       setLoading(true);
 
-      const response = await apiService.resetPassword({
+      const response = await authService.resetPassword({
         email: email,
         password: password,
         confirm_password: confirmPassword,
@@ -55,12 +55,15 @@ export default function ResetPassword() {
           [
             {
               text: "Go to Login",
-              onPress: () => router.replace("/auth/login" as any)
-            }
+              onPress: () => router.replace("/auth/login" as any),
+            },
           ]
         );
       } else {
-        Alert.alert("Error", response.message || "Failed to reset password. Please try again.");
+        Alert.alert(
+          "Error",
+          response.message || "Failed to reset password. Please try again."
+        );
       }
     } catch (error: any) {
       console.error("Reset password error:", error);
@@ -69,7 +72,8 @@ export default function ResetPassword() {
       if (error.message) {
         errorMessage = error.message;
       } else if (error.statusCode === 400) {
-        errorMessage = "Invalid request. Please try the forgot password process again.";
+        errorMessage =
+          "Invalid request. Please try the forgot password process again.";
       } else if (error.statusCode >= 500) {
         errorMessage = "Server error. Please try again later.";
       }
@@ -94,8 +98,8 @@ export default function ResetPassword() {
             Reset Password 🔒
           </Text>
           <Text className="text-gray-600 text-base leading-6">
-            Create a new password for your account. Make sure it&apos;s strong and
-            secure.
+            Create a new password for your account. Make sure it&apos;s strong
+            and secure.
           </Text>
         </View>
 
