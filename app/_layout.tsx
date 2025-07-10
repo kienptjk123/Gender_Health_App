@@ -7,8 +7,13 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import "../global.css";
 
+import AuthGuard from "@/components/AuthGuard";
+import { SafeProvider } from "@/components/SafeArea";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function RootLayout() {
@@ -18,17 +23,49 @@ export default function RootLayout() {
   });
 
   if (!loaded) {
-    // Async font loading only occurs in development.
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <SafeProvider>
+        <AuthProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <AuthGuard>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="auth" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="onboarding"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="home" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="dashboard"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="tracking"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="calendar"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="blog" options={{ headerShown: false }} />
+                <Stack.Screen name="forum" options={{ headerShown: false }} />
+                <Stack.Screen name="profile" options={{ headerShown: false }} />
+                <Stack.Screen name="test" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              </Stack>
+            </AuthGuard>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </AuthProvider>
+      </SafeProvider>
+      <Toast />
+    </SafeAreaProvider>
   );
 }
