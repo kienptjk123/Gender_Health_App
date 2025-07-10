@@ -1,16 +1,22 @@
 import { apiService } from "../utils/fetcher";
-import type { BlogPost, BlogResponse } from "../models/blog";
+import type {
+  BlogPost,
+  BlogResponse,
+  BlogSingleResponse,
+} from "../models/blog";
 
 export const blogApi = {
   getAll: async (page: number = 1, limit: number = 10): Promise<BlogPost[]> => {
     const response = await apiService.get("/blogs", {
       params: { page, limit },
     });
-    return (response.data as BlogResponse).data;
+    const responseData = response.data as BlogResponse;
+    return responseData.data;
   },
 
   getById: async (id: string | number): Promise<BlogPost> => {
     const response = await apiService.get(`/blogs/${id}`);
-    return response.data as BlogPost;
+    const responseData = response.data as BlogSingleResponse;
+    return responseData.data;
   },
 };

@@ -8,6 +8,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import "../global.css";
 
 import AuthGuard from "@/components/AuthGuard";
@@ -37,6 +38,11 @@ export default function RootLayout() {
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen name="auth" options={{ headerShown: false }} />
                 <Stack.Screen
+                  name="onboarding"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="home" options={{ headerShown: false }} />
+                <Stack.Screen
                   name="dashboard"
                   options={{ headerShown: false }}
                 />
@@ -45,16 +51,13 @@ export default function RootLayout() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
-                  name="onboarding"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="home" options={{ headerShown: false }} />
-                <Stack.Screen
                   name="calendar"
                   options={{ headerShown: false }}
                 />
-                <Stack.Screen name="explore" options={{ headerShown: false }} />
+                <Stack.Screen name="blog" options={{ headerShown: false }} />
+                <Stack.Screen name="forum" options={{ headerShown: false }} />
                 <Stack.Screen name="profile" options={{ headerShown: false }} />
+                <Stack.Screen name="test" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               </Stack>
             </AuthGuard>
@@ -62,6 +65,7 @@ export default function RootLayout() {
           </ThemeProvider>
         </AuthProvider>
       </SafeProvider>
+      <Toast />
     </SafeAreaProvider>
   );
 }

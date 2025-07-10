@@ -4,6 +4,7 @@ export interface BlogPost {
   content: string;
   date: string;
   image: string;
+  staffId?: number;
   tags?: {
     tag: {
       id: number;
@@ -27,13 +28,19 @@ export interface BlogRequest {
 }
 
 export interface BlogResponse {
+  message: string;
   data: BlogPost[];
-  pagination: {
+  pagination?: {
     currentPage: number;
     pageSize: number;
     totalItems: number;
     totalPages: number;
   };
+}
+
+export interface BlogSingleResponse {
+  message: string;
+  data: BlogPost;
 }
 
 export interface BlogMessageResponse {

@@ -9,6 +9,9 @@ import {
   RegisterRequest,
   ResetPasswordRequest,
   VerifyForgotPasswordRequest,
+  VerifyMobileOTPReqBody,
+  ResendMobileOTPReqBody,
+  MobileOTPResponse,
 } from "../models";
 
 // API configuration
@@ -63,7 +66,7 @@ export class AuthService {
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const url = `${this.baseURL}/users/register`;
+    const url = `${this.baseURL}/users/mobile/register`;
 
     try {
       console.log("📝 Registering user:", userData.email);
@@ -78,6 +81,7 @@ export class AuthService {
       });
 
       const data = await response.json();
+      console.log("Registration response:", data);
 
       if (!response.ok) {
         const error: ApiError = {
@@ -90,7 +94,15 @@ export class AuthService {
         throw error;
       }
 
-      return data;
+      // Map the API response to AuthResponse format (login.ts structure)
+      return {
+        message: data.message || "Registration successful",
+        result: {
+          access_token: data.data?.access_token || "",
+          refresh_token: data.data?.refresh_token || "",
+          role: "user",
+        },
+      };
     } catch (error) {
       console.error("❌ Registration failed:", error);
 
@@ -442,6 +454,96 @@ export class AuthService {
     } catch (error) {
       console.error("❌ Get user data failed:", error);
       return null;
+    }
+  }
+
+  /**
+   * Verify mobile OTP
+   */
+  async verifyMobileOTP(data: VerifyMobileOTPReqBody): Promise<MobileOTPResponse> {
+    const url = `${this.baseURL}/users/mobile/verify-otp`;
+
+    try {
+      console.log("✅ Verifying mobile OTP for:", data.email);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        const error: ApiError = {
+          success: false,
+          message: responseData.message || "OTP verification failed",
+          error: responseData.error || "Verification error",
+          statusCode: response.status,
+          details: responseData,
+        };
+        throw error;
+      }
+
+      return responseData;
+    } catch (error) {
+      console.error("❌ Mobile OTP verification failed:", error);
+
+      if (error instanceof TypeError && error.message.includes("network")) {
+        throw new Error(
+          "Network error. Please check your internet connection."
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Resend mobile OTP
+   */
+  async resendMobileOTP(data: ResendMobileOTPReqBody): Promise<MobileOTPResponse> {
+    const url = `${this.baseURL}/users/mobile/resend-otp`;
+
+    try {
+      console.log("📤 Resending mobile OTP to:", data.email);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        const error: ApiError = {
+          success: false,
+          message: responseData.message || "Failed to resend OTP",
+          error: responseData.error || "Resend error",
+          statusCode: response.status,
+          details: responseData,
+        };
+        throw error;
+      }
+
+      return responseData;
+    } catch (error) {
+      console.error("❌ Resend mobile OTP failed:", error);
+
+      if (error instanceof TypeError && error.message.includes("network")) {
+        throw new Error(
+          "Network error. Please check your internet connection."
+        );
+      }
+
+      throw error;
     }
   }
 }

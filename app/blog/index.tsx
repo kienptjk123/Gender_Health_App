@@ -40,9 +40,17 @@ export default function BlogTab() {
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-2xl font-bold text-gray-800">Health Blog</Text>
-        <TouchableOpacity className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-          <Text className="text-blue-500 font-bold">+</Text>
-        </TouchableOpacity>
+        <View className="flex-row space-x-2">
+          <TouchableOpacity
+            onPress={() => router.push("/test/debug")}
+            className="w-10 h-10 bg-red-100 rounded-full items-center justify-center"
+          >
+            <Text className="text-red-500 font-bold">🐛</Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+            <Text className="text-blue-500 font-bold">+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search Bar */}
@@ -63,7 +71,12 @@ export default function BlogTab() {
             <TouchableOpacity
               key={blog.id}
               className="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
-              onPress={() => router.push(`/blog/${blog.id}`)}
+              onPress={() => {
+                console.log("📱 Navigating to blog:", blog.id);
+                console.log("📱 Blog title:", blog.title);
+                console.log("📱 Using router.push:", `/blog/${blog.id}`);
+                router.push(`/blog/${blog.id}`);
+              }}
             >
               <View className="flex-row">
                 <View className="w-20 h-20 bg-gray-200 rounded-lg mr-4 items-center justify-center">

@@ -1,4 +1,4 @@
 import BlogComponent from "../blog/index";
 import withBottomTabs from "@/components/withBottomTabs";
 
-export default withBottomTabs(BlogComponent, "#f9fafb");
+export default withBottomTabs(BlogComponent, "#ffffff");

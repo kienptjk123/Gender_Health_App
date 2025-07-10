@@ -3,12 +3,12 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
 
 export default function Login() {
@@ -21,20 +21,32 @@ export default function Login() {
   const handleLogin = async () => {
     // Validate input fields
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Please fill in all fields',
+      });
       return;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert("Error", "Please enter a valid email address");
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Email',
+        text2: 'Please enter a valid email address',
+      });
       return;
     }
 
     // Validate password length
     if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters long");
+      Toast.show({
+        type: 'error',
+        text1: 'Password Too Short',
+        text2: 'Password must be at least 6 characters long',
+      });
       return;
     }
 
@@ -46,7 +58,13 @@ export default function Login() {
         password: password,
       });
 
-      // Login successful - redirect to tabs manually
+      // Login successful - show success toast
+      Toast.show({
+        type: 'success',
+        text1: 'Login Successful! 🎉',
+        text2: 'Welcome back!',
+      });
+
       console.log("Login successful - redirecting to tabs");
       
       // Add a small delay to ensure auth state is updated
@@ -79,7 +97,11 @@ export default function Login() {
         errorMessage = "Server error. Please try again later.";
       }
 
-      Alert.alert("Login Failed", errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: errorMessage,
+      });
     } finally {
       setLoading(false);
     }

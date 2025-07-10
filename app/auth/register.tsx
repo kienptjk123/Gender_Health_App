@@ -3,12 +3,15 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  Modal,
+  Pressable,
+  ScrollView,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
 
 export default function Register() {
@@ -16,73 +19,124 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(2000);
+  const [selectedMonth, setSelectedMonth] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
 
-  // Helper function to format date input
-  const handleDateChange = (text: string) => {
-    // Remove all non-numeric characters
-    const cleaned = text.replace(/\D/g, '');
-    
-    // Add dashes automatically
-    let formatted = cleaned;
-    if (cleaned.length >= 4) {
-      formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => 1900 + i).reverse();
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const handleDateConfirm = () => {
+    const date = new Date(selectedYear, selectedMonth, selectedDay);
+    setDateOfBirth(date);
+    setShowDatePicker(false);
+  };
+
+  const handleDateCancel = () => {
+    setShowDatePicker(false);
+  };
+
+  const openDatePicker = () => {
+    // Set default values when opening picker
+    if (dateOfBirth) {
+      setSelectedYear(dateOfBirth.getFullYear());
+      setSelectedMonth(dateOfBirth.getMonth());
+      setSelectedDay(dateOfBirth.getDate());
+    } else {
+      // Default to 20 years ago
+      const defaultDate = new Date();
+      defaultDate.setFullYear(defaultDate.getFullYear() - 20);
+      setSelectedYear(defaultDate.getFullYear());
+      setSelectedMonth(defaultDate.getMonth());
+      setSelectedDay(defaultDate.getDate());
     }
-    if (cleaned.length >= 6) {
-      formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
-    }
-    
-    setDateOfBirth(formatted);
+    setShowDatePicker(true);
   };
 
   const handleRegister = async () => {
     // Validate all required fields
     if (!name || !email || !password || !confirmPassword || !dateOfBirth) {
-      Alert.alert("Error", "Please fill in all fields");
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Please fill in all fields',
+      });
       return;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert("Error", "Please enter a valid email address");
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Email',
+        text2: 'Please enter a valid email address',
+      });
       return;
     }
 
     // Validate password strength
     if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters long");
+      Toast.show({
+        type: 'error',
+        text1: 'Password Too Short',
+        text2: 'Password must be at least 6 characters long',
+      });
       return;
     }
 
     // Validate password confirmation
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+      Toast.show({
+        type: 'error',
+        text1: 'Password Mismatch',
+        text2: 'Passwords do not match',
+      });
       return;
     }
 
     // Validate date of birth
-    const birthDate = new Date(dateOfBirth);
-    if (isNaN(birthDate.getTime())) {
-      Alert.alert("Error", "Please enter a valid date of birth (YYYY-MM-DD)");
+    if (!dateOfBirth || isNaN(dateOfBirth.getTime())) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Date',
+        text2: 'Please select a valid date of birth',
+      });
       return;
     }
 
     // Check if user is at least 13 years old
     const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
+    const age = today.getFullYear() - dateOfBirth.getFullYear();
     if (age < 13) {
-      Alert.alert("Error", "You must be at least 13 years old to register");
+      Toast.show({
+        type: 'error',
+        text1: 'Age Requirement',
+        text2: 'You must be at least 13 years old to register',
+      });
       return;
     }
 
     // Check terms agreement
     if (!agreeTerms) {
-      Alert.alert("Error", "Please agree to Terms & Conditions");
+      Toast.show({
+        type: 'error',
+        text1: 'Terms Required',
+        text2: 'Please agree to Terms & Conditions',
+      });
       return;
     }
 
@@ -90,7 +144,7 @@ export default function Register() {
       setLoading(true);
 
       // Convert date to ISO format for API
-      const isoDateOfBirth = new Date(dateOfBirth).toISOString();
+      const isoDateOfBirth = dateOfBirth.toISOString();
 
       await register({
         name: name.trim(),
@@ -100,19 +154,19 @@ export default function Register() {
         date_of_birth: isoDateOfBirth,
       });
 
-      // Registration successful - redirect to login
+      // Registration successful
       console.log("Registration successful");
       
-      Alert.alert(
-        "Registration Successful! 🎉", 
-        "Your account has been created successfully. Please login to continue.",
-        [
-          {
-            text: "Go to Login",
-            onPress: () => router.replace("/auth/login" as any)
-          }
-        ]
-      );
+      Toast.show({
+        type: 'success',
+        text1: 'Registration Successful! 🎉',
+        text2: 'Please check your email for OTP verification',
+      });
+
+      // Navigate to OTP verification after a short delay
+      setTimeout(() => {
+        router.push(`/auth/verify-mobile-otp?email=${encodeURIComponent(email.trim())}`);
+      }, 1000);
       
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -129,7 +183,11 @@ export default function Register() {
         errorMessage = "Server error. Please try again later.";
       }
 
-      Alert.alert("Registration Failed", errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
@@ -231,18 +289,109 @@ export default function Register() {
             <Text className="text-gray-800 font-medium mb-2">
               Date of Birth
             </Text>
-            <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
+            <TouchableOpacity
+              onPress={openDatePicker}
+              className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4"
+            >
               <Text className="text-gray-400 mr-3">📅</Text>
-              <TextInput
-                className="flex-1 text-gray-800"
-                placeholder="YYYY-MM-DD (e.g., 1995-03-28)"
-                placeholderTextColor="#9CA3AF"
-                value={dateOfBirth}
-                onChangeText={handleDateChange}
-                keyboardType="numeric"
-                maxLength={10}
-              />
-            </View>
+              <Text className="flex-1 text-gray-800">
+                {dateOfBirth 
+                  ? dateOfBirth.toLocaleDateString("en-GB", {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    })
+                  : "Select your date of birth"
+                }
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Custom Date Picker Modal */}
+            <Modal
+              visible={showDatePicker}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={handleDateCancel}
+            >
+              <View className="flex-1 justify-center bg-black bg-opacity-50">
+                <View className="bg-white mx-4 rounded-2xl p-6">
+                  <Text className="text-lg font-semibold text-center mb-4">
+                    Select Date of Birth
+                  </Text>
+                  
+                  <View className="flex-row justify-between mb-6">
+                    {/* Year Selector */}
+                    <View className="flex-1 mx-1">
+                      <Text className="text-sm font-medium text-gray-700 mb-2">Year</Text>
+                      <ScrollView className="max-h-32 border border-gray-300 rounded-lg">
+                        {years.map((year) => (
+                          <Pressable
+                            key={year}
+                            onPress={() => setSelectedYear(year)}
+                            className={`p-2 ${selectedYear === year ? 'bg-pink-100' : ''}`}
+                          >
+                            <Text className={`text-center ${selectedYear === year ? 'text-pink-600 font-semibold' : 'text-gray-700'}`}>
+                              {year}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </ScrollView>
+                    </View>
+                    
+                    {/* Month Selector */}
+                    <View className="flex-1 mx-1">
+                      <Text className="text-sm font-medium text-gray-700 mb-2">Month</Text>
+                      <ScrollView className="max-h-32 border border-gray-300 rounded-lg">
+                        {months.map((month, index) => (
+                          <Pressable
+                            key={index}
+                            onPress={() => setSelectedMonth(index)}
+                            className={`p-2 ${selectedMonth === index ? 'bg-pink-100' : ''}`}
+                          >
+                            <Text className={`text-center ${selectedMonth === index ? 'text-pink-600 font-semibold' : 'text-gray-700'}`}>
+                              {month}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </ScrollView>
+                    </View>
+                    
+                    {/* Day Selector */}
+                    <View className="flex-1 mx-1">
+                      <Text className="text-sm font-medium text-gray-700 mb-2">Day</Text>
+                      <ScrollView className="max-h-32 border border-gray-300 rounded-lg">
+                        {Array.from({ length: getDaysInMonth(selectedYear, selectedMonth) }, (_, i) => i + 1).map((day) => (
+                          <Pressable
+                            key={day}
+                            onPress={() => setSelectedDay(day)}
+                            className={`p-2 ${selectedDay === day ? 'bg-pink-100' : ''}`}
+                          >
+                            <Text className={`text-center ${selectedDay === day ? 'text-pink-600 font-semibold' : 'text-gray-700'}`}>
+                              {day}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  </View>
+                  
+                  <View className="flex-row justify-end">
+                    <TouchableOpacity
+                      onPress={handleDateCancel}
+                      className="px-4 py-2 rounded-lg bg-gray-200 mr-3"
+                    >
+                      <Text className="text-gray-700">Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleDateConfirm}
+                      className="px-4 py-2 rounded-lg bg-pink-500"
+                    >
+                      <Text className="text-white">Confirm</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
           </View>
         </View>
 
