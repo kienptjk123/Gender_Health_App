@@ -19,7 +19,6 @@ export default function Login() {
   const { login } = useAuth();
 
   const handleLogin = async () => {
-    // Validate input fields
     if (!email || !password) {
       Toast.show({
         type: "error",
@@ -29,7 +28,6 @@ export default function Login() {
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Toast.show({
@@ -40,7 +38,6 @@ export default function Login() {
       return;
     }
 
-    // Validate password length
     if (password.length < 6) {
       Toast.show({
         type: "error",
@@ -58,7 +55,6 @@ export default function Login() {
         password: password,
       });
 
-      // Login successful - show success toast
       Toast.show({
         type: "success",
         text1: "Login Successful! 🎉",
@@ -67,13 +63,11 @@ export default function Login() {
 
       console.log("Login successful - redirecting to tabs");
 
-      // Add a small delay to ensure auth state is updated
       setTimeout(() => {
         try {
           router.replace("/(tabs)" as any);
         } catch (navError) {
           console.error("Navigation error:", navError);
-          // Fallback redirect to home tab
           router.replace("/(tabs)/" as any);
         }
       }, 100);

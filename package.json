@@ -13,10 +13,12 @@
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "^2.1.2",
+    "@react-native-community/datetimepicker": "^8.4.2",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
     "axios": "^1.10.0",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.5.0",
     "expo": "53.0.12",
     "expo-blur": "~14.1.5",
@@ -34,6 +36,7 @@
     "nativewind": "^4.1.23",
     "react": "19.0.0",
     "react-dom": "19.0.0",
+    "react-hook-form": "^7.60.0",
     "react-native": "0.79.4",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-reanimated": "~3.17.4",
@@ -41,7 +44,7 @@
     "react-native-screens": "~4.11.1",
     "react-native-toast-message": "^2.3.3",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "13.13.5",
+    "react-native-webview": "^13.13.5",
     "tailwindcss": "^3.4.17"
   },
   "devDependencies": {

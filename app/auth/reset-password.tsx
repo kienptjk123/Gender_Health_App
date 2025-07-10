@@ -3,12 +3,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
 
 export default function ResetPassword() {
@@ -21,21 +21,30 @@ export default function ResetPassword() {
   const email = params.email as string;
 
   const handleResetPassword = async () => {
-    // Validate all required fields
     if (!password || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all fields");
+      Toast.show({
+        type: "error",
+        text1: "Missing Fields",
+        text2: "Please fill in all fields",
+      });
       return;
     }
 
-    // Validate password strength
     if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters long");
+      Toast.show({
+        type: "error",
+        text1: "Password Too Short",
+        text2: "Password must be at least 6 characters long",
+      });
       return;
     }
 
-    // Validate password confirmation
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+      Toast.show({
+        type: "error",
+        text1: "Password Mismatch",
+        text2: "Passwords do not match",
+      });
       return;
     }
 
@@ -49,21 +58,22 @@ export default function ResetPassword() {
       });
 
       if (response.success) {
-        Alert.alert(
-          "Password Reset Successful! 🎉",
-          "Your password has been reset successfully. You can now login with your new password.",
-          [
-            {
-              text: "Go to Login",
-              onPress: () => router.replace("/auth/login" as any),
-            },
-          ]
-        );
+        Toast.show({
+          type: "success",
+          text1: "Password Reset Successful! 🎉",
+          text2: "Your password has been reset successfully",
+        });
+
+        setTimeout(() => {
+          router.replace("/auth/login" as any);
+        }, 1000);
       } else {
-        Alert.alert(
-          "Error",
-          response.message || "Failed to reset password. Please try again."
-        );
+        Toast.show({
+          type: "error",
+          text1: "Reset Failed",
+          text2:
+            response.message || "Failed to reset password. Please try again.",
+        });
       }
     } catch (error: any) {
       console.error("Reset password error:", error);
@@ -78,7 +88,11 @@ export default function ResetPassword() {
         errorMessage = "Server error. Please try again later.";
       }
 
-      Alert.alert("Reset Failed", errorMessage);
+      Toast.show({
+        type: "error",
+        text1: "Reset Failed",
+        text2: errorMessage,
+      });
     } finally {
       setLoading(false);
     }

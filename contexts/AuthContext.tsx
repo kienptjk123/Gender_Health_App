@@ -153,6 +153,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (error) {
       console.error("Error during forgot password verification:", error);
+      console.error(
+        "=== AuthContext: verifyForgotPassword error - NO NAVIGATION will be triggered ==="
+      );
+
+      // IMPORTANT: Just throw the error, don't trigger any navigation
+      // The calling component (OTP verification page) will handle the error and UI
       throw error;
     } finally {
       setIsLoading(false);

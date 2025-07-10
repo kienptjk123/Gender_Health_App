@@ -3,12 +3,12 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
 
 export default function ForgotPassword() {
@@ -17,14 +17,21 @@ export default function ForgotPassword() {
 
   const handleSendOTP = async () => {
     if (!email.trim()) {
-      Alert.alert("Error", "Please enter your email address");
+      Toast.show({
+        type: "error",
+        text1: "Missing Email",
+        text2: "Please enter your email address",
+      });
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert("Error", "Please enter a valid email address");
+      Toast.show({
+        type: "error",
+        text1: "Invalid Email",
+        text2: "Please enter a valid email address",
+      });
       return;
     }
 
@@ -39,33 +46,32 @@ export default function ForgotPassword() {
       console.log("Response type:", typeof response);
       console.log("Response success:", response.success);
       console.log("Response message:", response.message);
-      try {
-        router.push({
-          pathname: "/auth/otp-verification",
-          params: {
-            email: email.trim(),
-            type: "forgot-password",
-          },
-        });
-        console.log("Navigation completed successfully");
-      } catch (navError) {
-        console.error("Navigation error:", navError);
-        // Fallback navigation method
-        router.push(
-          `/auth/otp-verification?email=${encodeURIComponent(
-            email.trim()
-          )}&type=forgot-password`
-        );
-      }
 
-      // Show success message after navigation
+      Toast.show({
+        type: "success",
+        text1: "OTP Sent! 📧",
+        text2: "We've sent a verification code to your email address",
+      });
+
+      // Navigate to OTP verification page first
       setTimeout(() => {
-        Alert.alert(
-          "OTP Sent! 📧",
-          "We've sent a verification code to your email address. Please check your inbox and enter the code.",
-          [{ text: "OK" }]
-        );
-      }, 100);
+        try {
+          router.push({
+            pathname: "/auth/otp-verification",
+            params: {
+              email: email.trim(),
+              type: "forgot-password",
+            },
+          });
+          console.log("Navigation to OTP verification completed successfully");
+        } catch {
+          router.push(
+            `/auth/otp-verification?email=${encodeURIComponent(
+              email.trim()
+            )}&type=forgot-password`
+          );
+        }
+      }, 1000);
     } catch (error: any) {
       console.error("Forgot password error:", error);
 
@@ -78,7 +84,11 @@ export default function ForgotPassword() {
         errorMessage = "Server error. Please try again later.";
       }
 
-      Alert.alert("Error", errorMessage);
+      Toast.show({
+        type: "error",
+        text1: "Failed to Send OTP",
+        text2: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
@@ -136,28 +146,6 @@ export default function ForgotPassword() {
               Send OTP Code
             </Text>
           )}
-        </TouchableOpacity>
-
-        {/* Debug/Test button - remove in production */}
-        <TouchableOpacity
-          className="rounded-full py-4 bg-gray-500 mt-4"
-          onPress={() => {
-            if (email.trim()) {
-              router.push({
-                pathname: "/auth/otp-verification",
-                params: {
-                  email: email.trim(),
-                  type: "forgot-password",
-                },
-              });
-            } else {
-              Alert.alert("Error", "Please enter an email first");
-            }
-          }}
-        >
-          <Text className="text-white text-center text-lg font-semibold">
-            Test Navigation (Debug)
-          </Text>
         </TouchableOpacity>
       </View>
     </SafeArea>

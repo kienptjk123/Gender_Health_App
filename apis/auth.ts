@@ -14,7 +14,6 @@ import {
   MobileOTPResponse,
 } from "../models";
 
-// API configuration
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ||
   "http://ec2-52-221-179-12.ap-southeast-1.compute.amazonaws.com";
@@ -45,7 +44,6 @@ export class AuthService {
         throw error;
       }
 
-      // Store token if login successful
       if (data.success && data.token) {
         await AsyncStorage.setItem("auth_token", data.token);
         await AsyncStorage.setItem("user_data", JSON.stringify(data.user));
@@ -94,7 +92,6 @@ export class AuthService {
         throw error;
       }
 
-      // Map the API response to AuthResponse format (login.ts structure)
       return {
         message: data.message || "Registration successful",
         result: {
@@ -295,13 +292,9 @@ export class AuthService {
     }
   }
 
-  /**
-   * Get user profile (requires authentication)
-   */
   async getUserProfile(token?: string): Promise<ApiResponse> {
     const url = `${this.baseURL}/users/profile`;
 
-    // Get token from storage if not provided
     const authToken = token || (await AsyncStorage.getItem("auth_token"));
 
     if (!authToken) {
@@ -346,14 +339,9 @@ export class AuthService {
       throw error;
     }
   }
-
-  /**
-   * Update user profile (requires authentication)
-   */
   async updateUserProfile(userData: any, token?: string): Promise<ApiResponse> {
     const url = `${this.baseURL}/users/profile`;
 
-    // Get token from storage if not provided
     const authToken = token || (await AsyncStorage.getItem("auth_token"));
 
     if (!authToken) {
@@ -386,7 +374,6 @@ export class AuthService {
         throw error;
       }
 
-      // Update stored user data
       if (data.success && data.user) {
         await AsyncStorage.setItem("user_data", JSON.stringify(data.user));
       }
@@ -552,6 +539,5 @@ export class AuthService {
   }
 }
 
-// Export singleton instance
 export const authService = new AuthService();
 export default authService;

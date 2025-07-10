@@ -1,7 +1,8 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
+import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
 
 export default function OTPVerification() {
@@ -12,27 +13,35 @@ export default function OTPVerification() {
   const { verifyForgotPassword } = useAuth();
   const params = useLocalSearchParams();
   const email = params.email as string;
-  const type = params.type as string; // "forgot-password" or "register"
+  const type = params.type as string;
 
-  // Debug logging
+  // Prevent navigation on error with a ref
+  const preventNavigation = useRef(false);
+
+  // Focus effect to reset navigation prevention
+  useFocusEffect(
+    useCallback(() => {
+      console.log(
+        "OTP Verification page focused - resetting navigation prevention"
+      );
+      preventNavigation.current = false;
+      return () => {
+        // Cleanup if needed
+      };
+    }, [])
+  );
+
   useEffect(() => {
-    console.log("OTP Verification - Received params:", params);
-    console.log("OTP Verification - Email:", email);
-    console.log("OTP Verification - Type:", type);
-
-    // Check if email is missing and show error
     if (!email) {
       console.error("OTP Verification - No email provided");
-      Alert.alert(
-        "Error",
-        "Email address is required. Please go back and try again.",
-        [
-          {
-            text: "Go Back",
-            onPress: () => router.back(),
-          },
-        ]
-      );
+      Toast.show({
+        type: "error",
+        text1: "Missing Email",
+        text2: "Email address is required. Please go back and try again.",
+      });
+      setTimeout(() => {
+        router.back();
+      }, 2000);
     }
   }, [params, email, type]);
 
@@ -49,7 +58,6 @@ export default function OTPVerification() {
 
   const handleKeyPress = (key: string) => {
     if (key === "delete") {
-      // Handle backspace
       const newOtp = [...otp];
       for (let i = newOtp.length - 1; i >= 0; i--) {
         if (newOtp[i] !== "") {
@@ -59,7 +67,6 @@ export default function OTPVerification() {
       }
       setOtp(newOtp);
     } else if (/^\d$/.test(key)) {
-      // Handle number input
       const newOtp = [...otp];
       for (let i = 0; i < newOtp.length; i++) {
         if (newOtp[i] === "") {
@@ -69,8 +76,9 @@ export default function OTPVerification() {
       }
       setOtp(newOtp);
 
-      // Auto verify when all digits are entered
-      if (newOtp.every((digit) => digit !== "")) {
+      // Only auto-verify if all digits are filled and not currently loading
+      if (newOtp.every((digit) => digit !== "") && !loading) {
+        console.log("Auto-verifying OTP:", newOtp.join(""));
         handleVerifyOTP(newOtp.join(""));
       }
     }
@@ -79,7 +87,11 @@ export default function OTPVerification() {
   const handleVerifyOTP = async (otpCode?: string) => {
     const code = otpCode || otp.join("");
     if (code.length !== 6) {
-      Alert.alert("Error", "Please enter all 6 digits");
+      Toast.show({
+        type: "error",
+        text1: "Invalid OTP",
+        text2: "Please enter all 6 digits",
+      });
       return;
     }
 
@@ -87,44 +99,92 @@ export default function OTPVerification() {
       setLoading(true);
 
       if (type === "forgot-password") {
-        // Verify forgot password OTP
         await verifyForgotPassword({
           email: email,
           otp: code,
         });
 
-        Alert.alert(
-          "OTP Verified! ✅",
-          "Your identity has been verified. You can now reset your password.",
-          [
-            {
-              text: "Reset Password",
-              onPress: () =>
-                router.replace({
-                  pathname: "/auth/reset-password",
-                  params: { email },
-                } as any),
-            },
-          ]
-        );
+        // Only navigate on successful verification
+        Toast.show({
+          type: "success",
+          text1: "OTP Verified! ✅",
+          text2: "Your identity has been verified",
+        });
+
+        setTimeout(() => {
+          try {
+            router.replace({
+              pathname: "/auth/reset-password",
+              params: { email },
+            } as any);
+          } catch (navError) {
+            console.error("Navigation error:", navError);
+            router.replace(
+              `/auth/reset-password?email=${encodeURIComponent(email)}` as any
+            );
+          }
+        }, 1000);
       } else {
-        // This is for register OTP verification (future implementation)
-        Alert.alert("OTP Verified", "Registration completed successfully!");
-        router.replace("/auth/login" as any);
+        Toast.show({
+          type: "success",
+          text1: "OTP Verified",
+          text2: "Registration completed successfully!",
+        });
+
+        setTimeout(() => {
+          router.replace("/auth/login" as any);
+        }, 1000);
       }
     } catch (error: any) {
       console.error("OTP verification error:", error);
+      console.error("ERROR DETAILS:", JSON.stringify(error, null, 2));
 
+      // Set navigation prevention flag
+      preventNavigation.current = true;
+
+      // Clear the OTP input when verification fails
+      setOtp(["", "", "", "", "", ""]);
+
+      // Prevent any navigation by catching router calls
       let errorMessage = "Invalid OTP code. Please try again.";
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.statusCode === 400) {
-        errorMessage = "Invalid or expired OTP code.";
-      } else if (error.statusCode >= 500) {
-        errorMessage = "Server error. Please try again later.";
+
+      // Parse error message safely
+      if (error?.message) {
+        errorMessage = error.message.includes("OTP")
+          ? error.message
+          : "Invalid OTP code. Please try again.";
       }
 
-      Alert.alert("Verification Failed", errorMessage);
+      // Simple error message without detailed parsing to avoid any side effects
+      Toast.show({
+        type: "error",
+        text1: "Verification Failed",
+        text2: errorMessage,
+      });
+
+      // Explicitly log that we're staying on current page
+      console.log(
+        "=== CRITICAL: ERROR CAUGHT - Staying on OTP verification page, NEVER navigate ==="
+      );
+      console.log(
+        "=== Current route should remain: /auth/otp-verification ==="
+      );
+      console.log(
+        "=== Navigation prevention flag set:",
+        preventNavigation.current
+      );
+
+      // Extra safety: Prevent any potential navigation that might be triggered
+      // by ensuring we don't call any router methods or async operations that might trigger navigation
+
+      // DO NOT NAVIGATE - stay on current page for retry
+      // NO router.replace, router.push, or any navigation calls here
+
+      // Reset navigation prevention after a delay
+      setTimeout(() => {
+        preventNavigation.current = false;
+        console.log("Navigation prevention flag reset");
+      }, 3000);
     } finally {
       setLoading(false);
     }
@@ -133,10 +193,13 @@ export default function OTPVerification() {
   const handleResendOTP = () => {
     setResendTimer(56);
     setCanResend(false);
-    Alert.alert("OTP Sent", "A new OTP has been sent to your email");
+    Toast.show({
+      type: "success",
+      text1: "OTP Sent",
+      text2: "A new OTP has been sent to your email",
+    });
   };
 
-  // Function to mask email for privacy
   const getMaskedEmail = (email: string) => {
     if (!email) return "";
     const [username, domain] = email.split("@");
@@ -189,7 +252,6 @@ export default function OTPVerification() {
           </View>
 
           <View className="flex-row justify-center mb-6">
-            {" "}
             <Text className="text-gray-600">Didn&apos;t receive code? </Text>
             <TouchableOpacity
               onPress={canResend ? handleResendOTP : undefined}

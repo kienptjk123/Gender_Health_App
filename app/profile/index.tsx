@@ -1,20 +1,33 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function ProfileTab() {
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
+    Toast.show({
+      type: "info",
+      text1: "Logout Confirmation",
+      text2: "Tap again to confirm logout",
+    });
+
+    // Show a second toast asking for confirmation
+    setTimeout(() => {
+      Toast.show({
+        type: "error",
+        text1: "Confirm Logout",
+        text2: "Are you sure you want to logout?",
         onPress: async () => {
           await logout();
+          Toast.show({
+            type: "success",
+            text1: "Logged Out",
+            text2: "You have been successfully logged out",
+          });
         },
-      },
-    ]);
+      });
+    }, 100);
   };
 
   const profileSections = [

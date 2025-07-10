@@ -13,7 +13,6 @@ import { BlogPost } from "@/models/blog";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeArea } from "@/components/SafeArea";
 
-// Helper function to extract content from DraftJS or return plain text
 function getContentText(content: string): string {
   try {
     const parsed = JSON.parse(content);
@@ -22,20 +21,17 @@ function getContentText(content: string): string {
       return blocks
         .map((block: any) => block.text)
         .join("\n\n")
-        .replace(/\n{3,}/g, "\n\n"); // Clean up excessive line breaks
+        .replace(/\n{3,}/g, "\n\n");
     }
-  } catch {
-    // If parsing fails, return original content
-  }
+  } catch {}
   return content;
 }
 
-// Helper function to safely format dates
 function formatDate(dateString: string): string {
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      return dateString; // Return original string if invalid date
+      return dateString;
     }
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -43,7 +39,7 @@ function formatDate(dateString: string): string {
       day: "numeric",
     });
   } catch {
-    return dateString; // Return original string if parsing fails
+    return dateString;
   }
 }
 

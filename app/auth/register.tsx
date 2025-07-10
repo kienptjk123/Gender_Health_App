@@ -63,13 +63,11 @@ export default function Register() {
   };
 
   const openDatePicker = () => {
-    // Set default values when opening picker
     if (dateOfBirth) {
       setSelectedYear(dateOfBirth.getFullYear());
       setSelectedMonth(dateOfBirth.getMonth());
       setSelectedDay(dateOfBirth.getDate());
     } else {
-      // Default to 20 years ago
       const defaultDate = new Date();
       defaultDate.setFullYear(defaultDate.getFullYear() - 20);
       setSelectedYear(defaultDate.getFullYear());
@@ -80,7 +78,6 @@ export default function Register() {
   };
 
   const handleRegister = async () => {
-    // Validate all required fields
     if (!name || !email || !password || !confirmPassword || !dateOfBirth) {
       Toast.show({
         type: "error",
@@ -90,7 +87,6 @@ export default function Register() {
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Toast.show({
@@ -101,7 +97,6 @@ export default function Register() {
       return;
     }
 
-    // Validate password strength
     if (password.length < 6) {
       Toast.show({
         type: "error",
@@ -111,7 +106,6 @@ export default function Register() {
       return;
     }
 
-    // Validate password confirmation
     if (password !== confirmPassword) {
       Toast.show({
         type: "error",
@@ -121,7 +115,6 @@ export default function Register() {
       return;
     }
 
-    // Validate date of birth
     if (!dateOfBirth || isNaN(dateOfBirth.getTime())) {
       Toast.show({
         type: "error",
@@ -131,7 +124,6 @@ export default function Register() {
       return;
     }
 
-    // Check if user is at least 13 years old
     const today = new Date();
     const age = today.getFullYear() - dateOfBirth.getFullYear();
     if (age < 13) {
@@ -143,7 +135,6 @@ export default function Register() {
       return;
     }
 
-    // Check terms agreement
     if (!agreeTerms) {
       Toast.show({
         type: "error",
@@ -155,10 +146,7 @@ export default function Register() {
 
     try {
       setLoading(true);
-
-      // Convert date to ISO format for API
       const isoDateOfBirth = dateOfBirth.toISOString();
-
       await register({
         name: name.trim(),
         email: email.trim(),
@@ -167,7 +155,6 @@ export default function Register() {
         date_of_birth: isoDateOfBirth,
       });
 
-      // Registration successful
       console.log("Registration successful");
 
       Toast.show({
@@ -176,7 +163,6 @@ export default function Register() {
         text2: "Please check your email for OTP verification",
       });
 
-      // Navigate to OTP verification after a short delay
       setTimeout(() => {
         router.push(
           `/auth/verify-mobile-otp?email=${encodeURIComponent(email.trim())}`

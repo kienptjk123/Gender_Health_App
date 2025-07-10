@@ -19,7 +19,6 @@ export default function VerifyMobileOTP() {
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    // Start countdown when component mounts
     startCountdown();
   }, []);
 
@@ -34,7 +33,7 @@ export default function VerifyMobileOTP() {
   }, [countdown]);
 
   const startCountdown = () => {
-    setCountdown(60); // 60 seconds countdown
+    setCountdown(60);
   };
 
   const handleVerifyOTP = async () => {
@@ -70,7 +69,6 @@ export default function VerifyMobileOTP() {
         text2: "Your account has been verified successfully",
       });
 
-      // Navigate to login after a short delay
       setTimeout(() => {
         router.replace("/auth/login");
       }, 1000);
@@ -118,7 +116,6 @@ export default function VerifyMobileOTP() {
         text2: "A new OTP has been sent to your email address",
       });
 
-      // Reset OTP input and start countdown
       setOtp("");
       startCountdown();
     } catch (error: any) {

@@ -8,3 +8,4 @@ export * from "./common";
 export * from "./blog";
 export * from "./forum";
 export * from "./mobileOtp";
+export * from "./testPackage";
