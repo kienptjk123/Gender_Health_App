@@ -22,9 +22,9 @@ export default function Login() {
     // Validate input fields
     if (!email || !password) {
       Toast.show({
-        type: 'error',
-        text1: 'Validation Error',
-        text2: 'Please fill in all fields',
+        type: "error",
+        text1: "Validation Error",
+        text2: "Please fill in all fields",
       });
       return;
     }
@@ -33,9 +33,9 @@ export default function Login() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Toast.show({
-        type: 'error',
-        text1: 'Invalid Email',
-        text2: 'Please enter a valid email address',
+        type: "error",
+        text1: "Invalid Email",
+        text2: "Please enter a valid email address",
       });
       return;
     }
@@ -43,9 +43,9 @@ export default function Login() {
     // Validate password length
     if (password.length < 6) {
       Toast.show({
-        type: 'error',
-        text1: 'Password Too Short',
-        text2: 'Password must be at least 6 characters long',
+        type: "error",
+        text1: "Password Too Short",
+        text2: "Password must be at least 6 characters long",
       });
       return;
     }
@@ -60,13 +60,13 @@ export default function Login() {
 
       // Login successful - show success toast
       Toast.show({
-        type: 'success',
-        text1: 'Login Successful! 🎉',
-        text2: 'Welcome back!',
+        type: "success",
+        text1: "Login Successful! 🎉",
+        text2: "Welcome back!",
       });
 
       console.log("Login successful - redirecting to tabs");
-      
+
       // Add a small delay to ensure auth state is updated
       setTimeout(() => {
         try {
@@ -77,7 +77,6 @@ export default function Login() {
           router.replace("/(tabs)/" as any);
         }
       }, 100);
-      
     } catch (error: any) {
       console.error("Login error:", error);
 
@@ -98,8 +97,8 @@ export default function Login() {
       }
 
       Toast.show({
-        type: 'error',
-        text1: 'Login Failed',
+        type: "error",
+        text1: "Login Failed",
         text2: errorMessage,
       });
     } finally {
@@ -108,10 +107,10 @@ export default function Login() {
   };
 
   return (
-    <SafeArea 
-      backgroundColor="#ffffff" 
+    <SafeArea
+      backgroundColor="#ffffff"
       statusBarStyle="dark-content"
-      edges={['top', 'bottom', 'left', 'right']}
+      edges={["top", "bottom", "left", "right"]}
     >
       <View className="flex-1 px-6 py-4">
         <View className="flex-row items-center mb-8 mt-4">

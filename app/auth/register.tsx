@@ -30,10 +30,23 @@ export default function Register() {
   const { register } = useAuth();
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => 1900 + i).reverse();
+  const years = Array.from(
+    { length: currentYear - 1900 + 1 },
+    (_, i) => 1900 + i
+  ).reverse();
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   const getDaysInMonth = (year: number, month: number) => {
     return new Date(year, month + 1, 0).getDate();
@@ -70,9 +83,9 @@ export default function Register() {
     // Validate all required fields
     if (!name || !email || !password || !confirmPassword || !dateOfBirth) {
       Toast.show({
-        type: 'error',
-        text1: 'Validation Error',
-        text2: 'Please fill in all fields',
+        type: "error",
+        text1: "Validation Error",
+        text2: "Please fill in all fields",
       });
       return;
     }
@@ -81,9 +94,9 @@ export default function Register() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Toast.show({
-        type: 'error',
-        text1: 'Invalid Email',
-        text2: 'Please enter a valid email address',
+        type: "error",
+        text1: "Invalid Email",
+        text2: "Please enter a valid email address",
       });
       return;
     }
@@ -91,9 +104,9 @@ export default function Register() {
     // Validate password strength
     if (password.length < 6) {
       Toast.show({
-        type: 'error',
-        text1: 'Password Too Short',
-        text2: 'Password must be at least 6 characters long',
+        type: "error",
+        text1: "Password Too Short",
+        text2: "Password must be at least 6 characters long",
       });
       return;
     }
@@ -101,9 +114,9 @@ export default function Register() {
     // Validate password confirmation
     if (password !== confirmPassword) {
       Toast.show({
-        type: 'error',
-        text1: 'Password Mismatch',
-        text2: 'Passwords do not match',
+        type: "error",
+        text1: "Password Mismatch",
+        text2: "Passwords do not match",
       });
       return;
     }
@@ -111,9 +124,9 @@ export default function Register() {
     // Validate date of birth
     if (!dateOfBirth || isNaN(dateOfBirth.getTime())) {
       Toast.show({
-        type: 'error',
-        text1: 'Invalid Date',
-        text2: 'Please select a valid date of birth',
+        type: "error",
+        text1: "Invalid Date",
+        text2: "Please select a valid date of birth",
       });
       return;
     }
@@ -123,9 +136,9 @@ export default function Register() {
     const age = today.getFullYear() - dateOfBirth.getFullYear();
     if (age < 13) {
       Toast.show({
-        type: 'error',
-        text1: 'Age Requirement',
-        text2: 'You must be at least 13 years old to register',
+        type: "error",
+        text1: "Age Requirement",
+        text2: "You must be at least 13 years old to register",
       });
       return;
     }
@@ -133,9 +146,9 @@ export default function Register() {
     // Check terms agreement
     if (!agreeTerms) {
       Toast.show({
-        type: 'error',
-        text1: 'Terms Required',
-        text2: 'Please agree to Terms & Conditions',
+        type: "error",
+        text1: "Terms Required",
+        text2: "Please agree to Terms & Conditions",
       });
       return;
     }
@@ -156,18 +169,19 @@ export default function Register() {
 
       // Registration successful
       console.log("Registration successful");
-      
+
       Toast.show({
-        type: 'success',
-        text1: 'Registration Successful! 🎉',
-        text2: 'Please check your email for OTP verification',
+        type: "success",
+        text1: "Registration Successful! 🎉",
+        text2: "Please check your email for OTP verification",
       });
 
       // Navigate to OTP verification after a short delay
       setTimeout(() => {
-        router.push(`/auth/verify-mobile-otp?email=${encodeURIComponent(email.trim())}`);
+        router.push(
+          `/auth/verify-mobile-otp?email=${encodeURIComponent(email.trim())}`
+        );
       }, 1000);
-      
     } catch (error: any) {
       console.error("Registration error:", error);
 
@@ -184,8 +198,8 @@ export default function Register() {
       }
 
       Toast.show({
-        type: 'error',
-        text1: 'Registration Failed',
+        type: "error",
+        text1: "Registration Failed",
         text2: errorMessage,
       });
     } finally {
@@ -295,17 +309,16 @@ export default function Register() {
             >
               <Text className="text-gray-400 mr-3">📅</Text>
               <Text className="flex-1 text-gray-800">
-                {dateOfBirth 
+                {dateOfBirth
                   ? dateOfBirth.toLocaleDateString("en-GB", {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric'
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
                     })
-                  : "Select your date of birth"
-                }
+                  : "Select your date of birth"}
               </Text>
             </TouchableOpacity>
-            
+
             {/* Custom Date Picker Modal */}
             <Modal
               visible={showDatePicker}
@@ -318,55 +331,90 @@ export default function Register() {
                   <Text className="text-lg font-semibold text-center mb-4">
                     Select Date of Birth
                   </Text>
-                  
+
                   <View className="flex-row justify-between mb-6">
                     {/* Year Selector */}
                     <View className="flex-1 mx-1">
-                      <Text className="text-sm font-medium text-gray-700 mb-2">Year</Text>
+                      <Text className="text-sm font-medium text-gray-700 mb-2">
+                        Year
+                      </Text>
                       <ScrollView className="max-h-32 border border-gray-300 rounded-lg">
                         {years.map((year) => (
                           <Pressable
                             key={year}
                             onPress={() => setSelectedYear(year)}
-                            className={`p-2 ${selectedYear === year ? 'bg-pink-100' : ''}`}
+                            className={`p-2 ${
+                              selectedYear === year ? "bg-pink-100" : ""
+                            }`}
                           >
-                            <Text className={`text-center ${selectedYear === year ? 'text-pink-600 font-semibold' : 'text-gray-700'}`}>
+                            <Text
+                              className={`text-center ${
+                                selectedYear === year
+                                  ? "text-pink-600 font-semibold"
+                                  : "text-gray-700"
+                              }`}
+                            >
                               {year}
                             </Text>
                           </Pressable>
                         ))}
                       </ScrollView>
                     </View>
-                    
+
                     {/* Month Selector */}
                     <View className="flex-1 mx-1">
-                      <Text className="text-sm font-medium text-gray-700 mb-2">Month</Text>
+                      <Text className="text-sm font-medium text-gray-700 mb-2">
+                        Month
+                      </Text>
                       <ScrollView className="max-h-32 border border-gray-300 rounded-lg">
                         {months.map((month, index) => (
                           <Pressable
                             key={index}
                             onPress={() => setSelectedMonth(index)}
-                            className={`p-2 ${selectedMonth === index ? 'bg-pink-100' : ''}`}
+                            className={`p-2 ${
+                              selectedMonth === index ? "bg-pink-100" : ""
+                            }`}
                           >
-                            <Text className={`text-center ${selectedMonth === index ? 'text-pink-600 font-semibold' : 'text-gray-700'}`}>
+                            <Text
+                              className={`text-center ${
+                                selectedMonth === index
+                                  ? "text-pink-600 font-semibold"
+                                  : "text-gray-700"
+                              }`}
+                            >
                               {month}
                             </Text>
                           </Pressable>
                         ))}
                       </ScrollView>
                     </View>
-                    
+
                     {/* Day Selector */}
                     <View className="flex-1 mx-1">
-                      <Text className="text-sm font-medium text-gray-700 mb-2">Day</Text>
+                      <Text className="text-sm font-medium text-gray-700 mb-2">
+                        Day
+                      </Text>
                       <ScrollView className="max-h-32 border border-gray-300 rounded-lg">
-                        {Array.from({ length: getDaysInMonth(selectedYear, selectedMonth) }, (_, i) => i + 1).map((day) => (
+                        {Array.from(
+                          {
+                            length: getDaysInMonth(selectedYear, selectedMonth),
+                          },
+                          (_, i) => i + 1
+                        ).map((day) => (
                           <Pressable
                             key={day}
                             onPress={() => setSelectedDay(day)}
-                            className={`p-2 ${selectedDay === day ? 'bg-pink-100' : ''}`}
+                            className={`p-2 ${
+                              selectedDay === day ? "bg-pink-100" : ""
+                            }`}
                           >
-                            <Text className={`text-center ${selectedDay === day ? 'text-pink-600 font-semibold' : 'text-gray-700'}`}>
+                            <Text
+                              className={`text-center ${
+                                selectedDay === day
+                                  ? "text-pink-600 font-semibold"
+                                  : "text-gray-700"
+                              }`}
+                            >
                               {day}
                             </Text>
                           </Pressable>
@@ -374,7 +422,7 @@ export default function Register() {
                       </ScrollView>
                     </View>
                   </View>
-                  
+
                   <View className="flex-row justify-end">
                     <TouchableOpacity
                       onPress={handleDateCancel}

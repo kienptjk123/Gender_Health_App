@@ -40,18 +40,18 @@ export default function VerifyMobileOTP() {
   const handleVerifyOTP = async () => {
     if (!otp || otp.length !== 6) {
       Toast.show({
-        type: 'error',
-        text1: 'Invalid OTP',
-        text2: 'Please enter a valid 6-digit OTP',
+        type: "error",
+        text1: "Invalid OTP",
+        text2: "Please enter a valid 6-digit OTP",
       });
       return;
     }
 
     if (!email) {
       Toast.show({
-        type: 'error',
-        text1: 'Missing Email',
-        text2: 'Email is missing. Please go back and try again.',
+        type: "error",
+        text1: "Missing Email",
+        text2: "Email is missing. Please go back and try again.",
       });
       return;
     }
@@ -65,16 +65,15 @@ export default function VerifyMobileOTP() {
       });
 
       Toast.show({
-        type: 'success',
-        text1: 'Verification Successful! 🎉',
-        text2: 'Your account has been verified successfully',
+        type: "success",
+        text1: "Verification Successful! 🎉",
+        text2: "Your account has been verified successfully",
       });
 
       // Navigate to login after a short delay
       setTimeout(() => {
         router.replace("/auth/login");
       }, 1000);
-      
     } catch (error: any) {
       console.error("OTP verification error:", error);
 
@@ -87,8 +86,8 @@ export default function VerifyMobileOTP() {
       }
 
       Toast.show({
-        type: 'error',
-        text1: 'Verification Failed',
+        type: "error",
+        text1: "Verification Failed",
         text2: errorMessage,
       });
     } finally {
@@ -99,9 +98,9 @@ export default function VerifyMobileOTP() {
   const handleResendOTP = async () => {
     if (!email) {
       Toast.show({
-        type: 'error',
-        text1: 'Missing Email',
-        text2: 'Email is missing. Please go back and try again.',
+        type: "error",
+        text1: "Missing Email",
+        text2: "Email is missing. Please go back and try again.",
       });
       return;
     }
@@ -114,9 +113,9 @@ export default function VerifyMobileOTP() {
       });
 
       Toast.show({
-        type: 'success',
-        text1: 'OTP Resent! 📧',
-        text2: 'A new OTP has been sent to your email address',
+        type: "success",
+        text1: "OTP Resent! 📧",
+        text2: "A new OTP has been sent to your email address",
       });
 
       // Reset OTP input and start countdown
@@ -134,8 +133,8 @@ export default function VerifyMobileOTP() {
       }
 
       Toast.show({
-        type: 'error',
-        text1: 'Resend Failed',
+        type: "error",
+        text1: "Resend Failed",
         text2: errorMessage,
       });
     } finally {
@@ -146,7 +145,9 @@ export default function VerifyMobileOTP() {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   return (
@@ -172,9 +173,7 @@ export default function VerifyMobileOTP() {
         </View>
 
         <View className="mb-8">
-          <Text className="text-gray-800 font-medium mb-2">
-            Enter OTP Code
-          </Text>
+          <Text className="text-gray-800 font-medium mb-2">Enter OTP Code</Text>
           <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
             <Text className="text-gray-400 mr-3">🔢</Text>
             <TextInput
@@ -211,7 +210,7 @@ export default function VerifyMobileOTP() {
           <Text className="text-gray-600 text-sm mb-2">
             Didn&apos;t receive the code?
           </Text>
-          
+
           {countdown > 0 ? (
             <Text className="text-gray-500 text-sm">
               Resend available in {formatTime(countdown)}
@@ -234,9 +233,7 @@ export default function VerifyMobileOTP() {
         </View>
 
         <View className="flex-row justify-center mt-8">
-          <Text className="text-gray-600 text-sm">
-            Having trouble?{" "}
-          </Text>
+          <Text className="text-gray-600 text-sm">Having trouble? </Text>
           <TouchableOpacity onPress={() => router.push("/auth/register")}>
             <Text className="text-pink-500 text-sm font-semibold">
               Try Again

@@ -113,11 +113,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Check for success based on the actual API response format
       if (
-        response.message === "Mobile register success. Please check your email for OTP verification." ||
+        response.message ===
+          "Mobile register success. Please check your email for OTP verification." ||
         response.message === "Registration successful" ||
         response.message === "User registered successfully" ||
         response.message?.includes("register success") ||
-        response.message?.includes("Please check your email for OTP verification")
+        response.message?.includes(
+          "Please check your email for OTP verification"
+        )
       ) {
         console.log("Registration successful! User can now verify OTP.");
         return;

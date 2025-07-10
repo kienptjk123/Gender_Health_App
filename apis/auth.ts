@@ -460,7 +460,9 @@ export class AuthService {
   /**
    * Verify mobile OTP
    */
-  async verifyMobileOTP(data: VerifyMobileOTPReqBody): Promise<MobileOTPResponse> {
+  async verifyMobileOTP(
+    data: VerifyMobileOTPReqBody
+  ): Promise<MobileOTPResponse> {
     const url = `${this.baseURL}/users/mobile/verify-otp`;
 
     try {
@@ -505,7 +507,9 @@ export class AuthService {
   /**
    * Resend mobile OTP
    */
-  async resendMobileOTP(data: ResendMobileOTPReqBody): Promise<MobileOTPResponse> {
+  async resendMobileOTP(
+    data: ResendMobileOTPReqBody
+  ): Promise<MobileOTPResponse> {
     const url = `${this.baseURL}/users/mobile/resend-otp`;
 
     try {
