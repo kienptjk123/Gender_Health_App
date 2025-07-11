@@ -53,12 +53,14 @@ export interface ReplyRequest {
 export interface VoteData {
   id: number;
   customerProfileId: number; // Changed from userId to match API
-  questionId: number;
+  questionId?: number;
+  replyId?: number;
   voteType: "UP" | "DOWN";
   createdAt: string;
 }
 
 export interface VoteRequest {
   vote_type: "UP" | "DOWN";
-  question_id: number;
+  question_id?: number;
+  reply_id?: number;
 }

@@ -6,7 +6,7 @@ import type {
 } from "../models/blog";
 
 export const blogApi = {
-  getAll: async (page: number = 1, limit: number = 10): Promise<BlogPost[]> => {
+  getAll: async (page: number = 1, limit: number = 5): Promise<BlogPost[]> => {
     const response = await apiService.get("/blogs", {
       params: { page, limit },
     });

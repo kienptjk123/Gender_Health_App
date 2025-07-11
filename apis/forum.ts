@@ -70,7 +70,12 @@ export const replyApi = {
   },
 
   create: async (payload: ReplyRequest): Promise<ReplyData> => {
-    const response = await apiService.post("/replies", payload);
+    const response = await apiService.post("/replies/create", payload);
+    return (response.data as any).data as ReplyData;
+  },
+
+  getById: async (replyId: number): Promise<ReplyData> => {
+    const response = await apiService.get(`/replies/${replyId}`);
     return (response.data as any).data as ReplyData;
   },
 
@@ -78,12 +83,12 @@ export const replyApi = {
     id: number,
     payload: { content: string }
   ): Promise<ReplyData> => {
-    const response = await apiService.put(`/replies/${id}`, payload);
+    const response = await apiService.put(`/replies/update/${id}`, payload);
     return (response.data as any).data as ReplyData;
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiService.delete(`/replies/${id}`);
+    await apiService.delete(`/replies/delete/${id}`);
   },
 };
 
@@ -93,12 +98,17 @@ export const voteApi = {
     return (response.data as any).data as VoteData[];
   },
 
+  getByReplyId: async (replyId: number): Promise<VoteData[]> => {
+    const response = await apiService.get(`/votes/reply/${replyId}`);
+    return (response.data as any).data as VoteData[];
+  },
+
   create: async (payload: VoteRequest): Promise<VoteData> => {
-    const response = await apiService.post("/votes", payload);
+    const response = await apiService.post("/votes/create", payload);
     return (response.data as any).data as VoteData;
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiService.delete(`/votes/${id}`);
+    await apiService.delete(`/votes/delete/${id}`);
   },
 };
