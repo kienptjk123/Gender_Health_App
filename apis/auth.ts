@@ -1,18 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiService } from "../utils/fetcher";
 import {
   ApiResponse,
   AuthResponse,
   ForgotPasswordRequest,
   LoginRequest,
+  MobileOTPResponse,
   OTPVerificationRequest,
   RegisterRequest,
+  ResendMobileOTPReqBody,
   ResetPasswordRequest,
   VerifyForgotPasswordRequest,
   VerifyMobileOTPReqBody,
-  ResendMobileOTPReqBody,
-  MobileOTPResponse,
 } from "../models";
+import { apiService } from "../utils/fetcher";
 
 export class AuthService {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
@@ -206,9 +206,7 @@ export class AuthService {
     try {
       console.log("👤 Getting user profile");
 
-      const response = await apiService.get<ApiResponse>("/users/profile");
-
-      console.log("✅ User profile retrieved successfully:", response.data);
+      const response = await apiService.get<ApiResponse>("/users/me");
       return response.data;
     } catch (error: any) {
       console.error("❌ Get user profile failed:", error);

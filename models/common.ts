@@ -5,6 +5,7 @@ export interface ApiResponse<T = any> {
   data?: T;
   error?: string;
   statusCode?: number;
+  result?: T;
 }
 
 // Generic Auth Response (can be used for both login and register)

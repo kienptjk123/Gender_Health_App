@@ -1,6 +1,6 @@
-import React from "react";
-import { SafeArea } from "@/components/SafeArea";
 import BottomTabs from "@/components/BottomTabs";
+import { SafeArea } from "@/components/SafeArea";
+import React from "react";
 
 // Higher-Order Component to wrap tab pages with BottomTabs
 const withBottomTabs = <P extends object>(
