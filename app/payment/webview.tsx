@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 
 export default function PaymentWebview() {
-  const { paymentUrl, orderId, amount } = useLocalSearchParams<{
+  const { paymentUrl, amount } = useLocalSearchParams<{
     paymentUrl: string;
     orderId: string;
     amount: string;
@@ -21,36 +21,64 @@ export default function PaymentWebview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper function to safely parse URL parameters
+  const parseUrlParams = (url: string) => {
+    try {
+      const urlParts = url.split("?");
+      if (urlParts.length < 2) return new URLSearchParams();
+      return new URLSearchParams(urlParts[1]);
+    } catch (error) {
+      console.error(
+        "❌ [Payment WebView] Error parsing URL parameters:",
+        error
+      );
+      return new URLSearchParams();
+    }
+  };
+
   const handleNavigation = async (navState: any) => {
     const url = navState.url;
     console.log("🔄 [Payment WebView] Navigation to:", url);
 
-    // Check for success URL patterns
+    // Parse URL parameters to check VNPay response
+    const urlParams = parseUrlParams(url);
+    const vnpResponseCode = urlParams.get("vnp_ResponseCode");
+    const vnpTransactionStatus = urlParams.get("vnp_TransactionStatus");
+    const vnpAmount = urlParams.get("vnp_Amount");
+    const vnpOrderInfo = urlParams.get("vnp_OrderInfo");
+
+    console.log("🔍 [Payment WebView] VNPay Response Code:", vnpResponseCode);
+    console.log(
+      "🔍 [Payment WebView] VNPay Transaction Status:",
+      vnpTransactionStatus
+    );
+    console.log("🔍 [Payment WebView] VNPay Amount:", vnpAmount);
+    console.log("🔍 [Payment WebView] VNPay Order Info:", vnpOrderInfo);
+
+    // Check for VNPay success (response code 00 and transaction status 00)
     if (
+      (vnpResponseCode === "00" && vnpTransactionStatus === "00") ||
       url.includes("/payment/success") ||
       url.includes("/payment-success") ||
-      url.includes("success=true")
+      url.includes("success=true") ||
+      url.includes("vnp_ResponseCode=00")
     ) {
       console.log("✅ [Payment WebView] Payment success detected");
-
       try {
-        // Verify payment status with backend
-        if (orderId) {
-          // You could verify payment here
-          // const verification = await paymentApi.verifyPayment(orderId);
-          // if (verification.success) {
-          Toast.show({
-            type: "success",
-            text1: "Payment Successful!",
-            text2: "Your booking has been confirmed.",
-          });
+        Toast.show({
+          type: "success",
+          text1: "Payment Successful! 🎉",
+          text2: "Your payment has been processed successfully.",
+          position: "top",
+          visibilityTime: 3000,
+        });
+
+        // Navigate to success page
+        setTimeout(() => {
           router.replace("/payment/success" as any);
-          // }
-        } else {
-          router.replace("/payment/success" as any);
-        }
+        }, 1500);
       } catch (error) {
-        console.error("❌ [Payment WebView] Verification failed:", error);
+        console.error("❌ [Payment WebView] Success navigation error:", error);
         Toast.show({
           type: "error",
           text1: "Payment verification failed",
@@ -59,17 +87,27 @@ export default function PaymentWebview() {
         router.replace("/payment/failed" as any);
       }
     }
-    // Check for failure URL patterns
+    // Check for VNPay failure
     else if (
+      (vnpResponseCode && vnpResponseCode !== "00") ||
+      (vnpTransactionStatus && vnpTransactionStatus !== "00") ||
       url.includes("/payment/failed") ||
       url.includes("/payment-failed") ||
       url.includes("success=false")
     ) {
       console.log("❌ [Payment WebView] Payment failure detected");
+      console.log("❌ [Payment WebView] Response Code:", vnpResponseCode);
+      console.log(
+        "❌ [Payment WebView] Transaction Status:",
+        vnpTransactionStatus
+      );
+
       Toast.show({
         type: "error",
         text1: "Payment Failed",
-        text2: "Your payment was not processed.",
+        text2: "Your payment was not processed successfully.",
+        position: "top",
+        visibilityTime: 4000,
       });
       router.replace("/payment/failed" as any);
     }
@@ -84,8 +122,17 @@ export default function PaymentWebview() {
         type: "info",
         text1: "Payment Cancelled",
         text2: "You can try again later.",
+        position: "top",
+        visibilityTime: 3000,
       });
       router.back();
+    }
+    // Check if we're on the return URL (even if it has network error)
+    else if (url.includes("/payment/vnpay/return")) {
+      console.log(
+        "🔄 [Payment WebView] On VNPay return URL, checking parameters..."
+      );
+      // This will be handled by the parameter checking above
     }
   };
 
@@ -95,6 +142,75 @@ export default function PaymentWebview() {
 
   const handleError = (error: any) => {
     console.error("❌ [Payment WebView] Error:", error);
+
+    // Check if this is a network error on the return URL
+    const nativeEvent = error.nativeEvent;
+    if (nativeEvent && nativeEvent.url) {
+      const errorUrl = nativeEvent.url;
+      console.log("🔍 [Payment WebView] Error URL:", errorUrl);
+
+      // If error is on VNPay return URL, check the parameters
+      if (errorUrl.includes("/payment/vnpay/return")) {
+        console.log(
+          "🔄 [Payment WebView] Network error on return URL, checking parameters..."
+        );
+
+        try {
+          const urlParams = parseUrlParams(errorUrl);
+          const vnpResponseCode = urlParams.get("vnp_ResponseCode");
+          const vnpTransactionStatus = urlParams.get("vnp_TransactionStatus");
+
+          console.log(
+            "🔍 [Payment WebView] Error URL Response Code:",
+            vnpResponseCode
+          );
+          console.log(
+            "🔍 [Payment WebView] Error URL Transaction Status:",
+            vnpTransactionStatus
+          );
+
+          // Check if payment was actually successful despite network error
+          if (vnpResponseCode === "00" && vnpTransactionStatus === "00") {
+            console.log(
+              "✅ [Payment WebView] Payment was successful despite network error"
+            );
+            Toast.show({
+              type: "success",
+              text1: "Payment Successful! 🎉",
+              text2: "Your payment has been processed successfully.",
+              position: "top",
+              visibilityTime: 3000,
+            });
+
+            setTimeout(() => {
+              router.replace("/payment/success" as any);
+            }, 1500);
+            return;
+          } else if (vnpResponseCode && vnpResponseCode !== "00") {
+            console.log(
+              "❌ [Payment WebView] Payment failed with response code:",
+              vnpResponseCode
+            );
+            Toast.show({
+              type: "error",
+              text1: "Payment Failed",
+              text2: "Your payment was not processed successfully.",
+              position: "top",
+              visibilityTime: 4000,
+            });
+            router.replace("/payment/failed" as any);
+            return;
+          }
+        } catch (parseError) {
+          console.error(
+            "❌ [Payment WebView] Error parsing URL parameters:",
+            parseError
+          );
+        }
+      }
+    }
+
+    // Default error handling
     setError("Failed to load payment page");
     setLoading(false);
   };
@@ -219,6 +335,8 @@ export default function PaymentWebview() {
           <Text className="mt-4 text-gray-600">Loading payment page...</Text>
         </View>
       )}
+
+      <Toast />
     </View>
   );
 }

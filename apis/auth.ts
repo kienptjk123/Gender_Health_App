@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiService } from "../utils/fetcher";
 import {
-  ApiError,
   ApiResponse,
   AuthResponse,
   ForgotPasswordRequest,
@@ -14,46 +14,39 @@ import {
   MobileOTPResponse,
 } from "../models";
 
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL ||
-  "http://ec2-52-221-179-12.ap-southeast-1.compute.amazonaws.com";
 export class AuthService {
-  private baseURL = API_BASE_URL;
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const url = `${this.baseURL}/users/login`;
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(credentials),
-      });
+      console.log("🔐 Attempting login for:", credentials.email);
 
-      const data = await response.json();
+      const response = await apiService.post<AuthResponse>(
+        "/users/login",
+        credentials
+      );
 
-      if (!response.ok) {
-        const error: ApiError = {
-          success: false,
-          message: data.message || "Login failed",
-          error: data.error || "Authentication error",
-          statusCode: response.status,
-          details: data,
-        };
-        throw error;
+      console.log("✅ Login successful:", response.data);
+
+      // Store tokens if available
+      if (response.data.result?.access_token) {
+        await AsyncStorage.setItem(
+          "access_token",
+          response.data.result.access_token
+        );
+        await AsyncStorage.setItem(
+          "refresh_token",
+          response.data.result.refresh_token
+        );
       }
 
-      if (data.success && data.token) {
-        await AsyncStorage.setItem("auth_token", data.token);
-        await AsyncStorage.setItem("user_data", JSON.stringify(data.user));
-      }
-
-      return data;
-    } catch (error) {
+      return response.data;
+    } catch (error: any) {
       console.error("❌ Login failed:", error);
 
-      if (error instanceof TypeError && error.message.includes("network")) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+
+      if (error.message?.includes("network")) {
         throw new Error(
           "Network error. Please check your internet connection."
         );
@@ -64,46 +57,32 @@ export class AuthService {
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const url = `${this.baseURL}/users/mobile/register`;
-
     try {
       console.log("📝 Registering user:", userData.email);
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
+      const response = await apiService.post<any>(
+        "/users/mobile/register",
+        userData
+      );
 
-      const data = await response.json();
-      console.log("Registration response:", data);
-
-      if (!response.ok) {
-        const error: ApiError = {
-          success: false,
-          message: data.message || "Registration failed",
-          error: data.error || "Registration error",
-          statusCode: response.status,
-          details: data,
-        };
-        throw error;
-      }
+      console.log("✅ Registration successful:", response.data);
 
       return {
-        message: data.message || "Registration successful",
+        message: response.data.message || "Registration successful",
         result: {
-          access_token: data.data?.access_token || "",
-          refresh_token: data.data?.refresh_token || "",
+          access_token: response.data.data?.access_token || "",
+          refresh_token: response.data.data?.refresh_token || "",
           role: "user",
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Registration failed:", error);
 
-      if (error instanceof TypeError && error.message.includes("network")) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+
+      if (error.message?.includes("network")) {
         throw new Error(
           "Network error. Please check your internet connection."
         );
@@ -114,38 +93,24 @@ export class AuthService {
   }
 
   async verifyOTP(data: OTPVerificationRequest): Promise<ApiResponse> {
-    const url = `${this.baseURL}/users/verify-otp`;
-
     try {
       console.log("✅ Verifying OTP for:", data.email);
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await apiService.post<ApiResponse>(
+        "/users/verify-otp",
+        data
+      );
 
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        const error: ApiError = {
-          success: false,
-          message: responseData.message || "OTP verification failed",
-          error: responseData.error || "Verification error",
-          statusCode: response.status,
-          details: responseData,
-        };
-        throw error;
-      }
-
-      return responseData;
-    } catch (error) {
+      console.log("✅ OTP verification successful:", response.data);
+      return response.data;
+    } catch (error: any) {
       console.error("❌ OTP verification failed:", error);
 
-      if (error instanceof TypeError && error.message.includes("network")) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+
+      if (error.message?.includes("network")) {
         throw new Error(
           "Network error. Please check your internet connection."
         );
@@ -155,42 +120,25 @@ export class AuthService {
     }
   }
 
-  /**
-   * Request password reset
-   */
   async forgotPassword(data: ForgotPasswordRequest): Promise<ApiResponse> {
-    const url = `${this.baseURL}/users/forgot-password`;
-
     try {
       console.log("🔄 Requesting password reset for:", data.email);
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await apiService.post<ApiResponse>(
+        "/users/forgot-password",
+        data
+      );
 
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        const error: ApiError = {
-          success: false,
-          message: responseData.message || "Password reset request failed",
-          error: responseData.error || "Reset error",
-          statusCode: response.status,
-          details: responseData,
-        };
-        throw error;
-      }
-
-      return responseData;
-    } catch (error) {
+      console.log("✅ Password reset request successful:", response.data);
+      return response.data;
+    } catch (error: any) {
       console.error("❌ Password reset request failed:", error);
 
-      if (error instanceof TypeError && error.message.includes("network")) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+
+      if (error.message?.includes("network")) {
         throw new Error(
           "Network error. Please check your internet connection."
         );
@@ -200,92 +148,54 @@ export class AuthService {
     }
   }
 
-  /**
-   * Verify forgot password OTP
-   */
   async verifyForgotPassword(
     data: VerifyForgotPasswordRequest
   ): Promise<ApiResponse> {
-    const url = `${this.baseURL}/users/verify-forgot-password`;
-
     try {
       console.log("✅ Verifying forgot password OTP for:", data.email);
+      console.log("🔢 OTP being sent:", data.otp);
+      console.log("📝 Full request data:", JSON.stringify(data));
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await apiService.post<ApiResponse>(
+        "/users/verify-forgot-password",
+        data
+      );
 
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        const error: ApiError = {
-          success: false,
-          message: responseData.message || "OTP verification failed",
-          error: responseData.error || "Verification error",
-          statusCode: response.status,
-          details: responseData,
-        };
-        throw error;
-      }
-
-      return responseData;
-    } catch (error) {
+      console.log(
+        "✅ Forgot password OTP verification successful:",
+        response.data
+      );
+      return response.data;
+    } catch (error: any) {
       console.error("❌ Forgot password OTP verification failed:", error);
+      console.error("❌ Error response:", error.response?.data);
+      console.error("❌ Error status:", error.response?.status);
+      console.error("❌ Error message:", error.message);
 
-      if (error instanceof TypeError && error.message.includes("network")) {
-        throw new Error(
-          "Network error. Please check your internet connection."
-        );
+      if (error.response?.data) {
+        throw error.response.data;
       }
 
       throw error;
     }
   }
 
-  /**
-   * Reset password with new password
-   */
   async resetPassword(data: ResetPasswordRequest): Promise<ApiResponse> {
-    const url = `${this.baseURL}/users/reset-password`;
-
     try {
-      console.log("🔑 Resetting password for:", data.email);
+      console.log("🔑 Resetting password with OTP");
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await apiService.post<ApiResponse>(
+        "/users/reset-password",
+        data
+      );
 
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        const error: ApiError = {
-          success: false,
-          message: responseData.message || "Password reset failed",
-          error: responseData.error || "Reset error",
-          statusCode: response.status,
-          details: responseData,
-        };
-        throw error;
-      }
-
-      return responseData;
-    } catch (error) {
+      console.log("✅ Password reset successful:", response.data);
+      return response.data;
+    } catch (error: any) {
       console.error("❌ Password reset failed:", error);
 
-      if (error instanceof TypeError && error.message.includes("network")) {
-        throw new Error(
-          "Network error. Please check your internet connection."
-        );
+      if (error.response?.data) {
+        throw error.response.data;
       }
 
       throw error;
@@ -293,44 +203,21 @@ export class AuthService {
   }
 
   async getUserProfile(token?: string): Promise<ApiResponse> {
-    const url = `${this.baseURL}/users/profile`;
-
-    const authToken = token || (await AsyncStorage.getItem("auth_token"));
-
-    if (!authToken) {
-      throw new Error("No authentication token found. Please login first.");
-    }
-
     try {
       console.log("👤 Getting user profile");
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
+      const response = await apiService.get<ApiResponse>("/users/profile");
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        const error: ApiError = {
-          success: false,
-          message: data.message || "Failed to get user profile",
-          error: data.error || "Profile error",
-          statusCode: response.status,
-          details: data,
-        };
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
+      console.log("✅ User profile retrieved successfully:", response.data);
+      return response.data;
+    } catch (error: any) {
       console.error("❌ Get user profile failed:", error);
 
-      if (error instanceof TypeError && error.message.includes("network")) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+
+      if (error.message?.includes("network")) {
         throw new Error(
           "Network error. Please check your internet connection."
         );
@@ -339,50 +226,35 @@ export class AuthService {
       throw error;
     }
   }
+
   async updateUserProfile(userData: any, token?: string): Promise<ApiResponse> {
-    const url = `${this.baseURL}/users/profile`;
-
-    const authToken = token || (await AsyncStorage.getItem("auth_token"));
-
-    if (!authToken) {
-      throw new Error("No authentication token found. Please login first.");
-    }
-
     try {
       console.log("📝 Updating user profile");
 
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify(userData),
-      });
+      const response = await apiService.put<ApiResponse>(
+        "/users/profile",
+        userData
+      );
 
-      const data = await response.json();
+      console.log("✅ User profile updated successfully:", response.data);
 
-      if (!response.ok) {
-        const error: ApiError = {
-          success: false,
-          message: data.message || "Failed to update user profile",
-          error: data.error || "Update error",
-          statusCode: response.status,
-          details: data,
-        };
-        throw error;
+      // Update local storage if successful
+      if (response.data.success && response.data.data) {
+        await AsyncStorage.setItem(
+          "user_data",
+          JSON.stringify(response.data.data)
+        );
       }
 
-      if (data.success && data.user) {
-        await AsyncStorage.setItem("user_data", JSON.stringify(data.user));
-      }
-
-      return data;
-    } catch (error) {
+      return response.data;
+    } catch (error: any) {
       console.error("❌ Update user profile failed:", error);
 
-      if (error instanceof TypeError && error.message.includes("network")) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+
+      if (error.message?.includes("network")) {
         throw new Error(
           "Network error. Please check your internet connection."
         );
@@ -392,26 +264,24 @@ export class AuthService {
     }
   }
 
-  /**
-   * Logout user (clear local storage)
-   */
   async logout(): Promise<void> {
     try {
       console.log("👋 Logging out user");
 
-      await AsyncStorage.multiRemove(["auth_token", "user_data"]);
+      await AsyncStorage.multiRemove([
+        "access_token",
+        "refresh_token",
+        "user_data",
+      ]);
     } catch (error) {
       console.error("❌ Logout failed:", error);
       throw error;
     }
   }
 
-  /**
-   * Check if user is authenticated
-   */
   async isAuthenticated(): Promise<boolean> {
     try {
-      const token = await AsyncStorage.getItem("auth_token");
+      const token = await AsyncStorage.getItem("access_token");
       return !!token;
     } catch (error) {
       console.error("❌ Check authentication failed:", error);
@@ -419,21 +289,15 @@ export class AuthService {
     }
   }
 
-  /**
-   * Get stored auth token
-   */
   async getAuthToken(): Promise<string | null> {
     try {
-      return await AsyncStorage.getItem("auth_token");
+      return await AsyncStorage.getItem("access_token");
     } catch (error) {
       console.error("❌ Get auth token failed:", error);
       return null;
     }
   }
 
-  /**
-   * Get stored user data
-   */
   async getUserData(): Promise<any | null> {
     try {
       const userData = await AsyncStorage.getItem("user_data");
@@ -444,44 +308,27 @@ export class AuthService {
     }
   }
 
-  /**
-   * Verify mobile OTP
-   */
   async verifyMobileOTP(
     data: VerifyMobileOTPReqBody
   ): Promise<MobileOTPResponse> {
-    const url = `${this.baseURL}/users/mobile/verify-otp`;
-
     try {
       console.log("✅ Verifying mobile OTP for:", data.email);
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await apiService.post<MobileOTPResponse>(
+        "/users/mobile/verify-otp",
+        data
+      );
 
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        const error: ApiError = {
-          success: false,
-          message: responseData.message || "OTP verification failed",
-          error: responseData.error || "Verification error",
-          statusCode: response.status,
-          details: responseData,
-        };
-        throw error;
-      }
-
-      return responseData;
-    } catch (error) {
+      console.log("✅ Mobile OTP verification successful:", response.data);
+      return response.data;
+    } catch (error: any) {
       console.error("❌ Mobile OTP verification failed:", error);
 
-      if (error instanceof TypeError && error.message.includes("network")) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+
+      if (error.message?.includes("network")) {
         throw new Error(
           "Network error. Please check your internet connection."
         );
@@ -491,44 +338,27 @@ export class AuthService {
     }
   }
 
-  /**
-   * Resend mobile OTP
-   */
   async resendMobileOTP(
     data: ResendMobileOTPReqBody
   ): Promise<MobileOTPResponse> {
-    const url = `${this.baseURL}/users/mobile/resend-otp`;
-
     try {
       console.log("📤 Resending mobile OTP to:", data.email);
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await apiService.post<MobileOTPResponse>(
+        "/users/mobile/resend-otp",
+        data
+      );
 
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        const error: ApiError = {
-          success: false,
-          message: responseData.message || "Failed to resend OTP",
-          error: responseData.error || "Resend error",
-          statusCode: response.status,
-          details: responseData,
-        };
-        throw error;
-      }
-
-      return responseData;
-    } catch (error) {
+      console.log("✅ Mobile OTP resent successfully:", response.data);
+      return response.data;
+    } catch (error: any) {
       console.error("❌ Resend mobile OTP failed:", error);
 
-      if (error instanceof TypeError && error.message.includes("network")) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+
+      if (error.message?.includes("network")) {
         throw new Error(
           "Network error. Please check your internet connection."
         );

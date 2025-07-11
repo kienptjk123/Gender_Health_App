@@ -3,15 +3,20 @@ export interface QuestionData {
   title: string;
   content: string;
   image?: string;
-  userId: number;
+  customerProfileId: number; // Changed from userId to match API
   createdAt: string;
   updatedAt: string;
-  user?: {
+  customerProfile?: {
     id: number;
     name: string;
+    username: string;
     avatar?: string;
   };
   replies?: ReplyData[];
+  _count?: {
+    replies: number;
+    votes: number;
+  };
   voteCount?: number;
   hasVoted?: boolean;
 }
@@ -26,13 +31,14 @@ export interface ReplyData {
   id: number;
   content: string;
   questionId: number;
-  userId: number;
+  customerProfileId: number; // Changed from userId to match API
   parentId?: number;
   createdAt: string;
   updatedAt: string;
-  user?: {
+  customerProfile?: {
     id: number;
     name: string;
+    username: string;
     avatar?: string;
   };
   replies?: ReplyData[];
@@ -46,7 +52,7 @@ export interface ReplyRequest {
 
 export interface VoteData {
   id: number;
-  userId: number;
+  customerProfileId: number; // Changed from userId to match API
   questionId: number;
   voteType: "UP" | "DOWN";
   createdAt: string;

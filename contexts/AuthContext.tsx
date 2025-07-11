@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const checkAuthState = async () => {
     try {
-      const token = await AsyncStorage.getItem("auth_token");
+      const token = await AsyncStorage.getItem("access_token");
       const refreshToken = await AsyncStorage.getItem("refresh_token");
       const userData = await AsyncStorage.getItem("user_data");
 
@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         // If any token is missing, clear all auth data
         await AsyncStorage.multiRemove([
-          "auth_token",
+          "access_token",
           "refresh_token",
           "user_data",
         ]);
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Error checking auth state:", error);
       // Clear auth data if there's an error
       await AsyncStorage.multiRemove([
-        "auth_token",
+        "access_token",
         "refresh_token",
         "user_data",
       ]);
@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           updated_at: new Date().toISOString(),
         };
 
-        await AsyncStorage.setItem("auth_token", access_token);
+        await AsyncStorage.setItem("access_token", access_token);
         await AsyncStorage.setItem("refresh_token", refresh_token);
         await AsyncStorage.setItem("user_data", JSON.stringify(user));
         setUser(user);
@@ -137,11 +137,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     data: VerifyForgotPasswordRequest
   ): Promise<void> => {
     try {
-      setIsLoading(true);
+      // DO NOT set loading state as it might trigger AuthGuard re-render
       console.log("Verifying forgot password OTP:", data);
 
       const response = await authService.verifyForgotPassword(data);
       console.log("Verify forgot password response:", response);
+
       if (
         response.success ||
         response.message === "OTP verified successfully"
@@ -154,22 +155,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error("Error during forgot password verification:", error);
       console.error(
-        "=== AuthContext: verifyForgotPassword error - NO NAVIGATION will be triggered ==="
+        "=== AuthContext: verifyForgotPassword error - ABSOLUTELY NO NAVIGATION ==="
       );
 
-      // IMPORTANT: Just throw the error, don't trigger any navigation
-      // The calling component (OTP verification page) will handle the error and UI
+      // CRITICAL: Just throw the error, NEVER trigger any navigation
+      // NEVER call setIsLoading or any state changes that might trigger AuthGuard
+      // The OTP verification page will handle the error and UI completely
       throw error;
-    } finally {
-      setIsLoading(false);
     }
+    // Removed finally block to avoid any state changes
   };
 
   const logout = async () => {
     try {
       setIsLoading(true);
       await AsyncStorage.multiRemove([
-        "auth_token",
+        "access_token",
         "refresh_token",
         "user_data",
       ]);

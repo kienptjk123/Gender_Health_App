@@ -9,21 +9,11 @@ export interface ApiResponse<T = any> {
 
 // Generic Auth Response (can be used for both login and register)
 export interface AuthResponse {
-  success: boolean;
   message: string;
-  data: {
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      avatar?: string;
-      phone?: string;
-      dateOfBirth?: string;
-      createdAt?: string;
-      updatedAt?: string;
-    };
-    token: string;
-    refreshToken?: string;
+  result: {
+    access_token: string;
+    refresh_token: string;
+    role: string;
   };
 }
 

@@ -1,34 +1,58 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View, Alert } from "react-native";
 import Toast from "react-native-toast-message";
 
 export default function ProfileTab() {
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    Toast.show({
-      type: "info",
-      text1: "Logout Confirmation",
-      text2: "Tap again to confirm logout",
-    });
-
-    // Show a second toast asking for confirmation
-    setTimeout(() => {
-      Toast.show({
-        type: "error",
-        text1: "Confirm Logout",
-        text2: "Are you sure you want to logout?",
+    Alert.alert("Confirm Logout", "Are you sure you want to logout?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Logout",
+        style: "destructive",
         onPress: async () => {
-          await logout();
-          Toast.show({
-            type: "success",
-            text1: "Logged Out",
-            text2: "You have been successfully logged out",
-          });
+          try {
+            await logout();
+            Toast.show({
+              type: "success",
+              text1: "Logged Out",
+              text2: "You have been successfully logged out",
+            });
+          } catch (error: any) {
+            console.error("Logout error:", error);
+            Toast.show({
+              type: "error",
+              text1: "Logout Failed",
+              text2: "Please try again",
+            });
+          }
         },
-      });
-    }, 100);
+      },
+    ]);
   };
+
+  // Alternative simple logout (uncomment if you prefer no confirmation)
+  // const handleLogout = async () => {
+  //   try {
+  //     await logout();
+  //     Toast.show({
+  //       type: "success",
+  //       text1: "Logged Out",
+  //       text2: "You have been successfully logged out",
+  //     });
+  //   } catch (error: any) {
+  //     console.error("Logout error:", error);
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Logout Failed",
+  //       text2: "Please try again",
+  //     });
+  //   }
+  // };
 
   const profileSections = [
     {
@@ -140,6 +164,7 @@ export default function ProfileTab() {
           <Text className="text-gray-400 text-xs">Version 1.0.0</Text>
         </View>
       </View>
+      <Toast />
     </ScrollView>
   );
 }

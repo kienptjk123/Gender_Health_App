@@ -8,92 +8,43 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useForm, Controller } from "react-hook-form";
 import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
+import { Ionicons } from "@expo/vector-icons";
+
+interface LoginFormData {
+  email: string;
+  password: string;
+}
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Toast.show({
-        type: "error",
-        text1: "Validation Error",
-        text2: "Please fill in all fields",
-      });
-      return;
-    }
+  const { control, handleSubmit } = useForm<LoginFormData>({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Toast.show({
-        type: "error",
-        text1: "Invalid Email",
-        text2: "Please enter a valid email address",
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      Toast.show({
-        type: "error",
-        text1: "Password Too Short",
-        text2: "Password must be at least 6 characters long",
-      });
-      return;
-    }
-
+  const onSubmit = async (data: LoginFormData) => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      await login({
-        email: email.trim(),
-        password: password,
-      });
-
+      await login(data);
       Toast.show({
         type: "success",
-        text1: "Login Successful! 🎉",
+        text1: "Login Successful",
         text2: "Welcome back!",
       });
-
-      console.log("Login successful - redirecting to tabs");
-
-      setTimeout(() => {
-        try {
-          router.replace("/(tabs)" as any);
-        } catch (navError) {
-          console.error("Navigation error:", navError);
-          router.replace("/(tabs)/" as any);
-        }
-      }, 100);
+      router.replace("/(tabs)/" as any);
     } catch (error: any) {
-      console.error("Login error:", error);
-
-      let errorMessage = "Login failed. Please try again.";
-
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.error) {
-        errorMessage = error.error;
-      } else if (error.statusCode === 401) {
-        errorMessage =
-          "Invalid email or password. Please check your credentials.";
-      } else if (error.statusCode === 404) {
-        errorMessage =
-          "Account not found. Please check your email or register.";
-      } else if (error.statusCode >= 500) {
-        errorMessage = "Server error. Please try again later.";
-      }
-
       Toast.show({
         type: "error",
         text1: "Login Failed",
-        text2: errorMessage,
+        text2: error?.response?.data?.message || "Invalid credentials",
       });
     } finally {
       setLoading(false);
@@ -101,92 +52,155 @@ export default function Login() {
   };
 
   return (
-    <SafeArea
-      backgroundColor="#ffffff"
-      statusBarStyle="dark-content"
-      edges={["top", "bottom", "left", "right"]}
-    >
-      <View className="flex-1 px-6 py-4">
-        <View className="flex-row items-center mb-8 mt-4">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Text className="text-2xl">←</Text>
-          </TouchableOpacity>
-        </View>
-
+    <SafeArea>
+      <View className="flex-1 justify-center px-8 bg-white">
+        {/* Header */}
         <View className="mb-8">
-          <Text className="text-3xl font-bold text-gray-800 mb-4">
-            Welcome Back! 👋
+          <Text className="text-3xl font-bold text-gray-900 text-center mb-2">
+            Welcome Back
           </Text>
-          <Text className="text-gray-600 text-base">
-            Sign in to your account to continue
+          <Text className="text-gray-600 text-center">
+            Sign in to your account
           </Text>
         </View>
 
-        <View className="space-y-6 mb-8">
+        {/* Form */}
+        <View className="space-y-6">
+          {/* Email Field */}
           <View>
-            <Text className="text-gray-800 font-medium mb-2">Email</Text>
-            <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
-              <Text className="text-gray-400 mr-3">📧</Text>
-              <TextInput
-                className="flex-1 text-gray-800"
-                placeholder="Enter your email"
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-            </View>
+            <Text className="text-sm font-medium text-gray-700 mb-2">
+              Email Address
+            </Text>
+            <Controller
+              control={control}
+              name="email"
+              rules={{
+                required: "Email is required",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Please enter a valid email address",
+                },
+              }}
+              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                <>
+                  <TextInput
+                    className={`border rounded-lg px-4 py-3 text-base ${
+                      error ? "border-red-500" : "border-gray-300"
+                    }`}
+                    placeholder="Enter your email"
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    value={value}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                  {error && (
+                    <Text className="text-red-500 text-sm mt-1">
+                      {error.message}
+                    </Text>
+                  )}
+                </>
+              )}
+            />
           </View>
 
+          {/* Password Field */}
           <View>
-            <Text className="text-gray-800 font-medium mb-2">Password</Text>
-            <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
-              <Text className="text-gray-400 mr-3">🔒</Text>
-              <TextInput
-                className="flex-1 text-gray-800"
-                placeholder="Enter your password"
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoComplete="password"
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                className="ml-3"
-              >
-                <Text className="text-gray-400">👁️</Text>
-              </TouchableOpacity>
-            </View>
+            <Text className="text-sm font-medium text-gray-700 mb-2">
+              Password
+            </Text>
+            <Controller
+              control={control}
+              name="password"
+              rules={{
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+              }}
+              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                <>
+                  <View className="relative">
+                    <TextInput
+                      className={`border rounded-lg px-4 py-3 pr-12 text-base ${
+                        error ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="Enter your password"
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      value={value}
+                      secureTextEntry={!showPassword}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-3"
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                        size={20}
+                        color="#6b7280"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  {error && (
+                    <Text className="text-red-500 text-sm mt-1">
+                      {error.message}
+                    </Text>
+                  )}
+                </>
+              )}
+            />
+          </View>
+
+          {/* Forgot Password Link */}
+          <View className="items-end">
+            <TouchableOpacity
+              onPress={() => router.push("/auth/forgot-password")}
+            >
+              <Text className="text-pink-500 font-medium">
+                Forgot Password?
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        <View className="flex-row justify-end mb-8">
-          <TouchableOpacity
-            onPress={() => router.push("/auth/forgot-password" as any)}
-          >
-            <Text className="text-pink-500 font-medium">Forgot Password?</Text>
-          </TouchableOpacity>
-        </View>
-
+        {/* Submit Button */}
         <TouchableOpacity
-          className={`rounded-full py-4 ${
+          className={`mt-8 rounded-lg py-4 ${
             loading ? "bg-pink-300" : "bg-pink-500"
           }`}
-          onPress={handleLogin}
+          onPress={handleSubmit(onSubmit)}
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color="white" />
+            <View className="flex-row items-center justify-center">
+              <ActivityIndicator size="small" color="white" />
+              <Text className="text-white font-semibold text-lg ml-2">
+                Signing In...
+              </Text>
+            </View>
           ) : (
-            <Text className="text-white text-center text-lg font-semibold">
-              Sign in
+            <Text className="text-white font-semibold text-lg text-center">
+              Sign In
             </Text>
           )}
         </TouchableOpacity>
+
+        {/* Footer */}
+        <View className="mt-8 items-center">
+          <Text className="text-gray-600">
+            Don&apos;t have an account?{" "}
+            <Text
+              className="text-pink-500 font-semibold"
+              onPress={() => router.push("/auth/register")}
+            >
+              Sign Up
+            </Text>
+          </Text>
+        </View>
       </View>
+      <Toast />
     </SafeArea>
   );
 }

@@ -11,12 +11,13 @@ import type {
 export const questionApi = {
   getAll: async (): Promise<QuestionData[]> => {
     const response = await apiService.get("/questions");
-    return response.data as QuestionData[];
+    // The API returns { message: "success", data: [...] }
+    return (response.data as any).data as QuestionData[];
   },
 
   getById: async (id: number): Promise<QuestionData> => {
     const response = await apiService.get(`/questions/${id}`);
-    return response.data as QuestionData;
+    return (response.data as any).data as QuestionData;
   },
 
   create: async (
@@ -31,7 +32,7 @@ export const questionApi = {
       payload,
       config
     );
-    return response.data as QuestionData;
+    return (response.data as any).data as QuestionData;
   },
 
   update: async (
@@ -47,7 +48,7 @@ export const questionApi = {
       payload,
       config
     );
-    return response.data as QuestionData;
+    return (response.data as any).data as QuestionData;
   },
 
   delete: async (id: number): Promise<void> => {
@@ -58,19 +59,19 @@ export const questionApi = {
     const response = await apiService.get("/questions/search", {
       params: { q: query },
     });
-    return response.data as QuestionData[];
+    return (response.data as any).data as QuestionData[];
   },
 };
 
 export const replyApi = {
   getByQuestionId: async (questionId: number): Promise<ReplyData[]> => {
     const response = await apiService.get(`/replies/question/${questionId}`);
-    return response.data as ReplyData[];
+    return (response.data as any).data as ReplyData[];
   },
 
   create: async (payload: ReplyRequest): Promise<ReplyData> => {
     const response = await apiService.post("/replies", payload);
-    return response.data as ReplyData;
+    return (response.data as any).data as ReplyData;
   },
 
   update: async (
@@ -78,7 +79,7 @@ export const replyApi = {
     payload: { content: string }
   ): Promise<ReplyData> => {
     const response = await apiService.put(`/replies/${id}`, payload);
-    return response.data as ReplyData;
+    return (response.data as any).data as ReplyData;
   },
 
   delete: async (id: number): Promise<void> => {
@@ -89,12 +90,12 @@ export const replyApi = {
 export const voteApi = {
   getByQuestionId: async (questionId: number): Promise<VoteData[]> => {
     const response = await apiService.get(`/votes/question/${questionId}`);
-    return response.data as VoteData[];
+    return (response.data as any).data as VoteData[];
   },
 
   create: async (payload: VoteRequest): Promise<VoteData> => {
     const response = await apiService.post("/votes", payload);
-    return response.data as VoteData;
+    return (response.data as any).data as VoteData;
   },
 
   delete: async (id: number): Promise<void> => {

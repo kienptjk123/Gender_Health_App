@@ -1,6 +1,6 @@
 import { authService } from "@/apis/auth";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Text,
@@ -8,90 +8,81 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useForm, Controller } from "react-hook-form";
 import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
+import { Ionicons } from "@expo/vector-icons";
+
+interface ResetPasswordFormData {
+  password: string;
+  confirmPassword: string;
+}
 
 export default function ResetPassword() {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const params = useLocalSearchParams();
   const email = params.email as string;
+  const otp = params.otp as string;
 
-  const handleResetPassword = async () => {
-    if (!password || !confirmPassword) {
+  const { control, handleSubmit, watch } = useForm<ResetPasswordFormData>({
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const watchedPassword = watch("password");
+  useEffect(() => {
+    if (!otp) {
       Toast.show({
         type: "error",
-        text1: "Missing Fields",
-        text2: "Please fill in all fields",
+        text1: "Missing Information",
+        text2: "OTP is required. Please go back and try again.",
+      });
+
+      setTimeout(() => {
+        router.replace("/auth/login");
+      }, 3000);
+    }
+  }, [otp]);
+
+  const onSubmit = async (data: ResetPasswordFormData) => {
+    if (!otp) {
+      Toast.show({
+        type: "error",
+        text1: "Missing Information",
+        text2: "OTP is required. Please go back and try again.",
       });
       return;
     }
 
-    if (password.length < 6) {
-      Toast.show({
-        type: "error",
-        text1: "Password Too Short",
-        text2: "Password must be at least 6 characters long",
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      Toast.show({
-        type: "error",
-        text1: "Password Mismatch",
-        text2: "Passwords do not match",
-      });
-      return;
-    }
-
+    setLoading(true);
     try {
-      setLoading(true);
-
-      const response = await authService.resetPassword({
-        email: email,
-        password: password,
-        confirm_password: confirmPassword,
+      await authService.resetPassword({
+        otp,
+        password: data.password,
+        confirm_password: data.confirmPassword,
       });
 
-      if (response.success) {
-        Toast.show({
-          type: "success",
-          text1: "Password Reset Successful! 🎉",
-          text2: "Your password has been reset successfully",
-        });
+      Toast.show({
+        type: "success",
+        text1: "Password Reset Successful",
+        text2: "You can now login with your new password",
+      });
 
-        setTimeout(() => {
-          router.replace("/auth/login" as any);
-        }, 1000);
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Reset Failed",
-          text2:
-            response.message || "Failed to reset password. Please try again.",
-        });
-      }
+      setTimeout(() => {
+        router.replace("/auth/login");
+      }, 2000);
     } catch (error: any) {
-      console.error("Reset password error:", error);
-
-      let errorMessage = "Failed to reset password. Please try again.";
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.statusCode === 400) {
-        errorMessage =
-          "Invalid request. Please try the forgot password process again.";
-      } else if (error.statusCode >= 500) {
-        errorMessage = "Server error. Please try again later.";
-      }
-
       Toast.show({
         type: "error",
         text1: "Reset Failed",
-        text2: errorMessage,
+        text2:
+          error?.message ||
+          error?.response?.data?.message ||
+          "Something went wrong",
       });
     } finally {
       setLoading(false);
@@ -99,102 +90,178 @@ export default function ResetPassword() {
   };
 
   return (
-    <SafeArea backgroundColor="#ffffff">
-      <View className="flex-1 px-6 py-4">
-        <View className="flex-row items-center mb-8 mt-4">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Text className="text-2xl">←</Text>
-          </TouchableOpacity>
+    <SafeArea>
+      <View className="flex-1 justify-center px-8 bg-white">
+        <View className="mb-8">
+          <Text className="text-3xl font-bold text-gray-900 text-center mb-2">
+            Reset Password
+          </Text>
+          <Text className="text-gray-600 text-center">
+            Create a new password for your account
+          </Text>
+          {email && (
+            <Text className="text-pink-500 font-medium text-center mt-1">
+              {email}
+            </Text>
+          )}
         </View>
 
-        <View className="mb-12">
-          <Text className="text-3xl font-bold text-gray-800 mb-4">
-            Reset Password 🔒
-          </Text>
-          <Text className="text-gray-600 text-base leading-6">
-            Create a new password for your account. Make sure it&apos;s strong
-            and secure.
-          </Text>
-        </View>
-
-        <View className="mb-6">
-          <Text className="text-gray-800 font-medium mb-2">New Password</Text>
-          <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
-            <Text className="text-gray-400 mr-3">🔒</Text>
-            <TextInput
-              className="flex-1 text-gray-800"
-              placeholder="Enter new password"
-              placeholderTextColor="#9CA3AF"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
+        <View className="space-y-6">
+          <View>
+            <Text className="text-sm font-medium text-gray-700 mb-2">
+              New Password
+            </Text>
+            <Controller
+              control={control}
+              name="password"
+              rules={{
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+              }}
+              render={({
+                field: { onChange, onBlur, value },
+                fieldState: { error },
+              }) => (
+                <>
+                  <View className="relative">
+                    <TextInput
+                      className={`border rounded-lg px-4 py-3 pr-12 text-base ${
+                        error ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="Enter new password"
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      value={value}
+                      secureTextEntry={!showPassword}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-3"
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                        size={20}
+                        color="#6b7280"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  {error && (
+                    <Text className="text-red-500 text-sm mt-1">
+                      {error.message}
+                    </Text>
+                  )}
+                </>
+              )}
             />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              className="ml-2"
-            >
-              <Text className="text-gray-400 text-xl">
-                {showPassword ? "🙈" : "👁️"}
-              </Text>
-            </TouchableOpacity>
+          </View>
+
+          {/* Confirm Password Field */}
+          <View>
+            <Text className="text-sm font-medium text-gray-700 mb-2">
+              Confirm New Password
+            </Text>
+            <Controller
+              control={control}
+              name="confirmPassword"
+              rules={{
+                required: "Please confirm your password",
+                validate: (value) =>
+                  value === watchedPassword || "Passwords do not match",
+              }}
+              render={({
+                field: { onChange, onBlur, value },
+                fieldState: { error },
+              }) => (
+                <>
+                  <View className="relative">
+                    <TextInput
+                      className={`border rounded-lg px-4 py-3 pr-12 text-base ${
+                        error ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="Confirm new password"
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      value={value}
+                      secureTextEntry={!showConfirmPassword}
+                    />
+                    <TouchableOpacity
+                      onPress={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-4 top-3"
+                    >
+                      <Ionicons
+                        name={
+                          showConfirmPassword
+                            ? "eye-off-outline"
+                            : "eye-outline"
+                        }
+                        size={20}
+                        color="#6b7280"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  {error && (
+                    <Text className="text-red-500 text-sm mt-1">
+                      {error.message}
+                    </Text>
+                  )}
+                </>
+              )}
+            />
+          </View>
+
+          {/* Password Requirements */}
+          <View className="bg-gray-50 p-4 rounded-lg">
+            <Text className="text-sm font-medium text-gray-700 mb-2">
+              Password Requirements:
+            </Text>
+            <Text className="text-sm text-gray-600">
+              • At least 6 characters long{"\n"}• Contains both letters and
+              numbers{"\n"}• Avoid common passwords
+            </Text>
           </View>
         </View>
 
-        <View className="mb-8">
-          <Text className="text-gray-800 font-medium mb-2">
-            Confirm New Password
-          </Text>
-          <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
-            <Text className="text-gray-400 mr-3">🔒</Text>
-            <TextInput
-              className="flex-1 text-gray-800"
-              placeholder="Confirm new password"
-              placeholderTextColor="#9CA3AF"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              autoCapitalize="none"
-            />
-            <TouchableOpacity
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="ml-2"
-            >
-              <Text className="text-gray-400 text-xl">
-                {showConfirmPassword ? "🙈" : "👁️"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View className="mb-8">
-          <Text className="text-gray-600 text-sm leading-5">
-            Password requirements:
-          </Text>
-          <Text className="text-gray-600 text-sm">
-            • At least 6 characters long
-          </Text>
-          <Text className="text-gray-600 text-sm">
-            • Must match the confirmation password
-          </Text>
-        </View>
-
+        {/* Submit Button */}
         <TouchableOpacity
-          className={`rounded-full py-4 ${
+          className={`mt-8 rounded-lg py-4 ${
             loading ? "bg-pink-300" : "bg-pink-500"
           }`}
-          onPress={handleResetPassword}
+          onPress={handleSubmit(onSubmit)}
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color="white" />
+            <View className="flex-row items-center justify-center">
+              <ActivityIndicator size="small" color="white" />
+              <Text className="text-white font-semibold text-lg ml-2">
+                Resetting Password...
+              </Text>
+            </View>
           ) : (
-            <Text className="text-white text-center text-lg font-semibold">
+            <Text className="text-white font-semibold text-lg text-center">
               Reset Password
             </Text>
           )}
         </TouchableOpacity>
+
+        {/* Footer */}
+        <View className="mt-8 items-center">
+          <Text className="text-gray-600">
+            Remember your password?{" "}
+            <Text
+              className="text-pink-500 font-semibold"
+              onPress={() => router.push("/auth/login")}
+            >
+              Sign In
+            </Text>
+          </Text>
+        </View>
       </View>
+      <Toast />
     </SafeArea>
   );
 }

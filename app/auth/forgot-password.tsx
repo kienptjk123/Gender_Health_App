@@ -8,15 +8,25 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useForm, Controller } from "react-hook-form";
 import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
 
+interface ForgotPasswordFormData {
+  email: string;
+}
+
 export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSendOTP = async () => {
-    if (!email.trim()) {
+  const { control, handleSubmit } = useForm<ForgotPasswordFormData>({
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const onSubmit = async (data: ForgotPasswordFormData) => {
+    if (!data.email.trim()) {
       Toast.show({
         type: "error",
         text1: "Missing Email",
@@ -25,69 +35,84 @@ export default function ForgotPassword() {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Toast.show({
-        type: "error",
-        text1: "Invalid Email",
-        text2: "Please enter a valid email address",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
-      console.log("Sending OTP for email:", email.trim());
+      console.log("🔄 Sending OTP for email:", data.email.trim());
 
       const response = await authService.forgotPassword({
-        email: email.trim(),
+        email: data.email.trim(),
       });
-      console.log("Forgot password response:", response);
-      console.log("Response type:", typeof response);
-      console.log("Response success:", response.success);
-      console.log("Response message:", response.message);
+
+      console.log("✅ Forgot password response:", response);
+      console.log("📊 Response type:", typeof response);
+      console.log("🎯 Response success:", response.success);
+      console.log("💬 Response message:", response.message);
 
       Toast.show({
         type: "success",
-        text1: "OTP Sent! 📧",
+        text1: "OTP Sent Successfully! 📧",
         text2: "We've sent a verification code to your email address",
+        position: "top",
+        visibilityTime: 4000,
       });
 
-      // Navigate to OTP verification page first
+      // Navigate to OTP verification page
       setTimeout(() => {
         try {
           router.push({
             pathname: "/auth/otp-verification",
             params: {
-              email: email.trim(),
+              email: data.email.trim(),
               type: "forgot-password",
             },
           });
-          console.log("Navigation to OTP verification completed successfully");
-        } catch {
+          console.log(
+            "✅ Navigation to OTP verification completed successfully"
+          );
+        } catch (navigationError) {
+          console.error(
+            "⚠️ Navigation method 1 failed, trying alternative:",
+            navigationError
+          );
           router.push(
             `/auth/otp-verification?email=${encodeURIComponent(
-              email.trim()
+              data.email.trim()
             )}&type=forgot-password`
           );
         }
       }, 1000);
     } catch (error: any) {
-      console.error("Forgot password error:", error);
+      console.error("❌ Forgot password error:", error);
+      console.error("📊 Error type:", typeof error);
+      console.error("🔍 Error details:", JSON.stringify(error, null, 2));
 
       let errorMessage = "Failed to send OTP. Please try again.";
-      if (error.message) {
+      let errorTitle = "Failed to Send OTP";
+
+      // Handle different error types
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+        console.log("📝 Using API error message:", errorMessage);
+      } else if (error?.message) {
         errorMessage = error.message;
-      } else if (error.statusCode === 404) {
+        console.log("📝 Using error message:", errorMessage);
+      } else if (error?.statusCode === 404) {
         errorMessage = "No account found with this email address.";
-      } else if (error.statusCode >= 500) {
+        errorTitle = "Account Not Found";
+      } else if (error?.statusCode >= 500) {
         errorMessage = "Server error. Please try again later.";
+        errorTitle = "Server Error";
+      } else if (error?.message?.includes("network")) {
+        errorMessage = "Network error. Please check your internet connection.";
+        errorTitle = "Network Error";
       }
 
       Toast.show({
         type: "error",
-        text1: "Failed to Send OTP",
+        text1: errorTitle,
         text2: errorMessage,
+        position: "top",
+        visibilityTime: 5000,
       });
     } finally {
       setLoading(false);
@@ -118,25 +143,54 @@ export default function ForgotPassword() {
           <Text className="text-gray-800 font-medium mb-2">
             Registered email address
           </Text>
-          <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
-            <Text className="text-gray-400 mr-3">📧</Text>
-            <TextInput
-              className="flex-1 text-gray-800"
-              placeholder="Enter your email"
-              placeholderTextColor="#9CA3AF"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
+          <Controller
+            control={control}
+            name="email"
+            rules={{
+              required: "Email is required",
+              pattern: {
+                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: "Please enter a valid email address",
+              },
+            }}
+            render={({
+              field: { onChange, onBlur, value },
+              fieldState: { error },
+            }) => (
+              <>
+                <View
+                  className={`flex-row items-center bg-gray-50 rounded-2xl px-4 py-4 ${
+                    error ? "border border-red-500" : ""
+                  }`}
+                >
+                  <Text className="text-gray-400 mr-3">📧</Text>
+                  <TextInput
+                    className="flex-1 text-gray-800"
+                    placeholder="Enter your email"
+                    placeholderTextColor="#9CA3AF"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+                {error && (
+                  <Text className="text-red-500 text-sm mt-2 ml-2">
+                    {error.message}
+                  </Text>
+                )}
+              </>
+            )}
+          />
         </View>
 
         <TouchableOpacity
           className={`rounded-full py-4 mb-4 ${
             loading ? "bg-pink-300" : "bg-pink-500"
           }`}
-          onPress={handleSendOTP}
+          onPress={handleSubmit(onSubmit)}
           disabled={loading}
         >
           {loading ? (
@@ -148,6 +202,7 @@ export default function ForgotPassword() {
           )}
         </TouchableOpacity>
       </View>
+      <Toast />
     </SafeArea>
   );
 }

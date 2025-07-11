@@ -13,7 +13,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const currentRoute = segments[0];
     const fullRoute = segments.join("/");
     const inAuthGroup = currentRoute === "(tabs)";
-    const inAuthFlow = ["auth", "dashboard", "tracking", "onboarding"].includes(
+    const inAuthFlow = ["auth", "onboarding", "tracking", "payment"].includes(
       currentRoute as string
     );
 
@@ -21,10 +21,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const isOTPVerificationPage =
       fullRoute.includes("otp-verification") ||
       fullRoute.includes("verify-mobile-otp") ||
+      fullRoute.includes("reset-password") || // Also protect reset password page
       segments.some(
         (segment) =>
-          segment === "otp-verification" || segment === "verify-mobile-otp"
+          segment === "otp-verification" ||
+          segment === "verify-mobile-otp" ||
+          segment === "reset-password"
       );
+
+    // Check if we're on any auth page or auth-related page
+    const isAuthPage = currentRoute === "auth";
 
     // Check if we're on the Welcome screen
     const isWelcomeRoute = !currentRoute;
@@ -35,34 +41,42 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     console.log("AuthGuard - In auth group:", inAuthGroup);
     console.log("AuthGuard - In auth flow:", inAuthFlow);
     console.log("AuthGuard - Is OTP verification page:", isOTPVerificationPage);
+    console.log("AuthGuard - Is auth page:", isAuthPage);
     console.log("AuthGuard - Is welcome route:", isWelcomeRoute);
 
-    // CRITICAL: Never redirect from OTP verification pages
+    // HIGHEST PRIORITY: NEVER redirect from OTP verification or reset password pages
     if (isOTPVerificationPage) {
-      console.log("AuthGuard - On OTP verification page, NEVER redirecting");
+      console.log(
+        "AuthGuard - On OTP/Reset password page, ABSOLUTELY NO redirecting"
+      );
       return;
     }
 
+    // NEVER redirect from auth pages (login, register, forgot-password, etc.)
+    if (isAuthPage) {
+      console.log("AuthGuard - On auth page, letting user complete auth flow");
+      return;
+    }
+
+    // NEVER redirect from auth flow pages
+    if (inAuthFlow) {
+      console.log("AuthGuard - In auth flow, allowing to continue");
+      return;
+    }
+
+    // Only handle redirect logic for protected routes and welcome screen
     if (!isAuthenticated) {
-      // User is not authenticated
       console.log("AuthGuard - User not authenticated");
       if (inAuthGroup) {
-        // Trying to access protected route, redirect to welcome
         console.log("AuthGuard - Redirecting to welcome from protected route");
         router.replace("/");
         return;
       }
-      // For auth flows (including other auth pages) - DO NOTHING
-      // Let user stay on current screen to complete auth process
-      if (inAuthFlow) {
-        console.log("AuthGuard - User in auth flow, allowing to continue");
-        return;
-      }
+      // Allow user to stay on public pages (welcome, auth, etc.)
+      console.log("AuthGuard - User on public page, allowing access");
     } else {
-      // User is authenticated
       console.log("AuthGuard - User authenticated");
       if (isWelcomeRoute) {
-        // On welcome screen but authenticated - redirect to tabs
         console.log("AuthGuard - Redirecting from welcome to tabs");
         try {
           router.replace("/(tabs)" as any);
@@ -70,8 +84,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           console.error("AuthGuard - Error redirecting to tabs:", error);
         }
       }
-      // For auth flows when authenticated - let them finish their flow
-      // Don't auto-redirect from auth screens
     }
   }, [isAuthenticated, isLoading, segments, user]);
 

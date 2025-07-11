@@ -1,6 +1,6 @@
 // Reset Password API Request and Response Types
 export interface ResetPasswordRequest {
-  email: string;
+  otp: string;
   password: string;
   confirm_password: string;
 }
