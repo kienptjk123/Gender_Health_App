@@ -43,10 +43,6 @@ export default function RootLayout() {
                 />
                 <Stack.Screen name="home" options={{ headerShown: false }} />
                 <Stack.Screen
-                  name="dashboard"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
                   name="tracking"
                   options={{ headerShown: false }}
                 />
@@ -58,6 +54,7 @@ export default function RootLayout() {
                 <Stack.Screen name="forum" options={{ headerShown: false }} />
                 <Stack.Screen name="profile" options={{ headerShown: false }} />
                 <Stack.Screen name="test" options={{ headerShown: false }} />
+                <Stack.Screen name="payment" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               </Stack>
             </AuthGuard>

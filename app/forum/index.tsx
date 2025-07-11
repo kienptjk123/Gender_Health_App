@@ -1,28 +1,26 @@
 import React, { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { useState, useEffect } from "react";
-import { questionApi } from "@/apis/forum";
-import { QuestionData } from "@/models/forum";
+import { useState } from "react";
+// import { questionApi } from "@/apis/forum";
+// import { QuestionData } from "@/models/forum";
 
 export default function ForumTab() {
   const [activeCategory, setActiveCategory] = useState("all");
-  const [questions, setQuestions] = useState<QuestionData[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchQuestions();
-  }, []);
+  // useEffect(() => {
+  //   fetchQuestions();
+  // }, []);
 
-  const fetchQuestions = async () => {
-    try {
-      setLoading(true);
-      const data = await questionApi.getAll();
-      setQuestions(data);
-    } catch (error) {
-      console.error("Error fetching questions:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchQuestions = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const data = await questionApi.getAll();
+  //     setQuestions(data);
+  //   } catch (error) {
+  //     console.error("Error fetching questions:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const categories = [
     { id: "all", name: "All", icon: "💬" },

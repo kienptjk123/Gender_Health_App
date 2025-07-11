@@ -7,106 +7,56 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Modal,
-  Pressable,
   ScrollView,
 } from "react-native";
+import { useForm, Controller } from "react-hook-form";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
+import { Ionicons } from "@expo/vector-icons";
+import dayjs from "dayjs";
+
+interface RegisterFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  dateOfBirth: Date | undefined;
+  agreeTerms: boolean;
+}
 
 export default function Register() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedYear, setSelectedYear] = useState(2000);
-  const [selectedMonth, setSelectedMonth] = useState(0);
-  const [selectedDay, setSelectedDay] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register: registerUser } = useAuth();
 
-  const currentYear = new Date().getFullYear();
-  const years = Array.from(
-    { length: currentYear - 1900 + 1 },
-    (_, i) => 1900 + i
-  ).reverse();
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  const getDaysInMonth = (year: number, month: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
+  const { control, handleSubmit, watch, setValue } = useForm<RegisterFormData>({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      dateOfBirth: undefined,
+      agreeTerms: false,
+    },
+  });
 
-  const handleDateConfirm = () => {
-    const date = new Date(selectedYear, selectedMonth, selectedDay);
-    setDateOfBirth(date);
-    setShowDatePicker(false);
-  };
+  const watchedPassword = watch("password");
+  const watchedDateOfBirth = watch("dateOfBirth");
 
-  const handleDateCancel = () => {
-    setShowDatePicker(false);
-  };
-
-  const openDatePicker = () => {
-    if (dateOfBirth) {
-      setSelectedYear(dateOfBirth.getFullYear());
-      setSelectedMonth(dateOfBirth.getMonth());
-      setSelectedDay(dateOfBirth.getDate());
-    } else {
-      const defaultDate = new Date();
-      defaultDate.setFullYear(defaultDate.getFullYear() - 20);
-      setSelectedYear(defaultDate.getFullYear());
-      setSelectedMonth(defaultDate.getMonth());
-      setSelectedDay(defaultDate.getDate());
-    }
-    setShowDatePicker(true);
-  };
-
-  const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword || !dateOfBirth) {
+  const onSubmit = async (data: RegisterFormData) => {
+    if (!data.agreeTerms) {
       Toast.show({
         type: "error",
-        text1: "Validation Error",
-        text2: "Please fill in all fields",
+        text1: "Terms Required",
+        text2: "Please agree to terms and conditions",
       });
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Toast.show({
-        type: "error",
-        text1: "Invalid Email",
-        text2: "Please enter a valid email address",
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      Toast.show({
-        type: "error",
-        text1: "Password Too Short",
-        text2: "Password must be at least 6 characters long",
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
+    if (data.password !== data.confirmPassword) {
       Toast.show({
         type: "error",
         text1: "Password Mismatch",
@@ -115,17 +65,16 @@ export default function Register() {
       return;
     }
 
-    if (!dateOfBirth || isNaN(dateOfBirth.getTime())) {
+    if (!data.dateOfBirth) {
       Toast.show({
         type: "error",
-        text1: "Invalid Date",
-        text2: "Please select a valid date of birth",
+        text1: "Date Required",
+        text2: "Please select your date of birth",
       });
       return;
     }
 
-    const today = new Date();
-    const age = today.getFullYear() - dateOfBirth.getFullYear();
+    const age = dayjs().diff(dayjs(data.dateOfBirth), "year");
     if (age < 13) {
       Toast.show({
         type: "error",
@@ -135,58 +84,80 @@ export default function Register() {
       return;
     }
 
-    if (!agreeTerms) {
-      Toast.show({
-        type: "error",
-        text1: "Terms Required",
-        text2: "Please agree to Terms & Conditions",
-      });
-      return;
-    }
-
+    setLoading(true);
     try {
-      setLoading(true);
-      const isoDateOfBirth = dateOfBirth.toISOString();
-      await register({
-        name: name.trim(),
-        email: email.trim(),
-        password: password,
-        confirm_password: confirmPassword,
-        date_of_birth: isoDateOfBirth,
+      console.log("🔄 Starting registration process for:", data.email);
+
+      await registerUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        confirm_password: data.confirmPassword,
+        date_of_birth: dayjs(data.dateOfBirth).format("YYYY-MM-DD"),
       });
 
-      console.log("Registration successful");
+      console.log("✅ Registration successful for:", data.email);
 
       Toast.show({
         type: "success",
         text1: "Registration Successful! 🎉",
         text2: "Please check your email for OTP verification",
+        position: "top",
+        visibilityTime: 3000,
       });
 
+      // Navigate to mobile OTP verification page
       setTimeout(() => {
-        router.push(
-          `/auth/verify-mobile-otp?email=${encodeURIComponent(email.trim())}`
-        );
+        try {
+          router.push({
+            pathname: "/auth/verify-mobile-otp",
+            params: {
+              email: data.email,
+              type: "registration",
+            },
+          });
+          console.log("✅ Navigation to mobile OTP verification completed");
+        } catch (navigationError) {
+          console.error(
+            "⚠️ Navigation method 1 failed, trying alternative:",
+            navigationError
+          );
+          router.push(
+            `/auth/verify-mobile-otp?email=${encodeURIComponent(
+              data.email
+            )}&type=registration`
+          );
+        }
       }, 1000);
     } catch (error: any) {
-      console.error("Registration error:", error);
+      console.error("❌ Registration failed:", error);
+      console.error("📊 Error type:", typeof error);
+      console.error("🔍 Error details:", JSON.stringify(error, null, 2));
 
       let errorMessage = "Registration failed. Please try again.";
+      let errorTitle = "Registration Failed";
 
-      if (error.message) {
+      // Handle different error types
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+        console.log("📝 Using API error message:", errorMessage);
+      } else if (error?.message) {
         errorMessage = error.message;
-      } else if (error.error) {
-        errorMessage = error.error;
-      } else if (error.statusCode === 409) {
-        errorMessage = "An account with this email already exists.";
-      } else if (error.statusCode >= 500) {
-        errorMessage = "Server error. Please try again later.";
+        console.log("📝 Using error message:", errorMessage);
+      } else if (error?.message?.includes("network")) {
+        errorMessage = "Network error. Please check your internet connection.";
+        errorTitle = "Network Error";
+      } else if (error?.message?.includes("email")) {
+        errorMessage = "Email already exists. Please use a different email.";
+        errorTitle = "Email Already Exists";
       }
 
       Toast.show({
         type: "error",
-        text1: "Registration Failed",
+        text1: errorTitle,
         text2: errorMessage,
+        position: "top",
+        visibilityTime: 5000,
       });
     } finally {
       setLoading(false);
@@ -194,276 +165,339 @@ export default function Register() {
   };
 
   return (
-    <SafeArea backgroundColor="#ffffff">
-      <View className="flex-1 px-6 py-4">
-        <View className="flex-row items-center mb-8 mt-4">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Text className="text-2xl">←</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View className="mb-8">
-          <Text className="text-3xl font-bold text-gray-800 mb-4">
-            Join Lunari Today ✨
-          </Text>
-          <Text className="text-gray-600 text-base">
-            Sign up to start tracking your cycle today
-          </Text>
-        </View>
-
-        <View className="space-y-6 mb-8">
-          <View>
-            <Text className="text-gray-800 font-medium mb-2">Full Name</Text>
-            <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
-              <Text className="text-gray-400 mr-3">👤</Text>
-              <TextInput
-                className="flex-1 text-gray-800"
-                placeholder="Enter your full name"
-                placeholderTextColor="#9CA3AF"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-                autoComplete="name"
-              />
-            </View>
-          </View>
-
-          <View>
-            <Text className="text-gray-800 font-medium mb-2">Email</Text>
-            <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
-              <Text className="text-gray-400 mr-3">📧</Text>
-              <TextInput
-                className="flex-1 text-gray-800"
-                placeholder="Enter your email"
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-            </View>
-          </View>
-
-          <View>
-            <Text className="text-gray-800 font-medium mb-2">Password</Text>
-            <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
-              <Text className="text-gray-400 mr-3">🔒</Text>
-              <TextInput
-                className="flex-1 text-gray-800"
-                placeholder="Enter your password"
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoComplete="password"
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                className="ml-3"
-              >
-                <Text className="text-gray-400">👁️</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View>
-            <Text className="text-gray-800 font-medium mb-2">
-              Confirm Password
+    <SafeArea>
+      <ScrollView
+        className="flex-1 bg-white"
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="flex-1 justify-center px-8 py-12">
+          {/* Header */}
+          <View className="mb-8">
+            <Text className="text-3xl font-bold text-gray-900 text-center mb-2">
+              Create Account
             </Text>
-            <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4">
-              <Text className="text-gray-400 mr-3">🔒</Text>
-              <TextInput
-                className="flex-1 text-gray-800"
-                placeholder="Confirm your password"
-                placeholderTextColor="#9CA3AF"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry={!showPassword}
-                autoComplete="password"
-              />
-            </View>
+            <Text className="text-gray-600 text-center">
+              Join us for a healthier lifestyle
+            </Text>
           </View>
 
-          <View>
-            <Text className="text-gray-800 font-medium mb-2">
-              Date of Birth
-            </Text>
-            <TouchableOpacity
-              onPress={openDatePicker}
-              className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-4"
-            >
-              <Text className="text-gray-400 mr-3">📅</Text>
-              <Text className="flex-1 text-gray-800">
-                {dateOfBirth
-                  ? dateOfBirth.toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })
-                  : "Select your date of birth"}
+          {/* Form */}
+          <View className="space-y-6">
+            {/* Name Field */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">
+                Full Name *
               </Text>
-            </TouchableOpacity>
-
-            {/* Custom Date Picker Modal */}
-            <Modal
-              visible={showDatePicker}
-              transparent={true}
-              animationType="slide"
-              onRequestClose={handleDateCancel}
-            >
-              <View className="flex-1 justify-center bg-black bg-opacity-50">
-                <View className="bg-white mx-4 rounded-2xl p-6">
-                  <Text className="text-lg font-semibold text-center mb-4">
-                    Select Date of Birth
-                  </Text>
-
-                  <View className="flex-row justify-between mb-6">
-                    {/* Year Selector */}
-                    <View className="flex-1 mx-1">
-                      <Text className="text-sm font-medium text-gray-700 mb-2">
-                        Year
+              <Controller
+                control={control}
+                name="name"
+                rules={{
+                  required: "Full name is required",
+                  minLength: {
+                    value: 2,
+                    message: "Name must be at least 2 characters",
+                  },
+                }}
+                render={({
+                  field: { onChange, onBlur, value },
+                  fieldState: { error },
+                }) => (
+                  <>
+                    <TextInput
+                      className={`border rounded-lg px-4 py-3 text-base ${
+                        error ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="Enter your full name"
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      value={value}
+                      autoCapitalize="words"
+                    />
+                    {error && (
+                      <Text className="text-red-500 text-sm mt-1">
+                        {error.message}
                       </Text>
-                      <ScrollView className="max-h-32 border border-gray-300 rounded-lg">
-                        {years.map((year) => (
-                          <Pressable
-                            key={year}
-                            onPress={() => setSelectedYear(year)}
-                            className={`p-2 ${
-                              selectedYear === year ? "bg-pink-100" : ""
-                            }`}
-                          >
-                            <Text
-                              className={`text-center ${
-                                selectedYear === year
-                                  ? "text-pink-600 font-semibold"
-                                  : "text-gray-700"
-                              }`}
-                            >
-                              {year}
-                            </Text>
-                          </Pressable>
-                        ))}
-                      </ScrollView>
-                    </View>
+                    )}
+                  </>
+                )}
+              />
+            </View>
 
-                    {/* Month Selector */}
-                    <View className="flex-1 mx-1">
-                      <Text className="text-sm font-medium text-gray-700 mb-2">
-                        Month
+            {/* Email Field */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">
+                Email Address *
+              </Text>
+              <Controller
+                control={control}
+                name="email"
+                rules={{
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Please enter a valid email address",
+                  },
+                }}
+                render={({
+                  field: { onChange, onBlur, value },
+                  fieldState: { error },
+                }) => (
+                  <>
+                    <TextInput
+                      className={`border rounded-lg px-4 py-3 text-base ${
+                        error ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="Enter your email"
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      value={value}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                    {error && (
+                      <Text className="text-red-500 text-sm mt-1">
+                        {error.message}
                       </Text>
-                      <ScrollView className="max-h-32 border border-gray-300 rounded-lg">
-                        {months.map((month, index) => (
-                          <Pressable
-                            key={index}
-                            onPress={() => setSelectedMonth(index)}
-                            className={`p-2 ${
-                              selectedMonth === index ? "bg-pink-100" : ""
-                            }`}
-                          >
-                            <Text
-                              className={`text-center ${
-                                selectedMonth === index
-                                  ? "text-pink-600 font-semibold"
-                                  : "text-gray-700"
-                              }`}
-                            >
-                              {month}
-                            </Text>
-                          </Pressable>
-                        ))}
-                      </ScrollView>
-                    </View>
+                    )}
+                  </>
+                )}
+              />
+            </View>
 
-                    {/* Day Selector */}
-                    <View className="flex-1 mx-1">
-                      <Text className="text-sm font-medium text-gray-700 mb-2">
-                        Day
+            {/* Date of Birth */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">
+                Date of Birth *
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                className="border border-gray-300 rounded-lg px-4 py-3 flex-row items-center justify-between"
+              >
+                <Text
+                  className={`text-base ${
+                    watchedDateOfBirth ? "text-gray-900" : "text-gray-500"
+                  }`}
+                >
+                  {watchedDateOfBirth
+                    ? dayjs(watchedDateOfBirth).format("DD/MM/YYYY")
+                    : "Select your date of birth"}
+                </Text>
+                <Ionicons name="calendar-outline" size={20} color="#6b7280" />
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  mode="date"
+                  value={watchedDateOfBirth || new Date(2000, 0, 1)}
+                  maximumDate={new Date()}
+                  minimumDate={new Date(1900, 0, 1)}
+                  onChange={(event, date) => {
+                    setShowDatePicker(false);
+                    if (date) {
+                      setValue("dateOfBirth", date);
+                    }
+                  }}
+                />
+              )}
+            </View>
+
+            {/* Password Field */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">
+                Password *
+              </Text>
+              <Controller
+                control={control}
+                name="password"
+                rules={{
+                  required: "Password is required",
+                  minLength: {
+                    value: 6,
+                    message: "Password must be at least 6 characters",
+                  },
+                }}
+                render={({
+                  field: { onChange, onBlur, value },
+                  fieldState: { error },
+                }) => (
+                  <>
+                    <View className="relative">
+                      <TextInput
+                        className={`border rounded-lg px-4 py-3 pr-12 text-base ${
+                          error ? "border-red-500" : "border-gray-300"
+                        }`}
+                        placeholder="Enter your password"
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        value={value}
+                        secureTextEntry={!showPassword}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-3"
+                      >
+                        <Ionicons
+                          name={
+                            showPassword ? "eye-off-outline" : "eye-outline"
+                          }
+                          size={20}
+                          color="#6b7280"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    {error && (
+                      <Text className="text-red-500 text-sm mt-1">
+                        {error.message}
                       </Text>
-                      <ScrollView className="max-h-32 border border-gray-300 rounded-lg">
-                        {Array.from(
-                          {
-                            length: getDaysInMonth(selectedYear, selectedMonth),
-                          },
-                          (_, i) => i + 1
-                        ).map((day) => (
-                          <Pressable
-                            key={day}
-                            onPress={() => setSelectedDay(day)}
-                            className={`p-2 ${
-                              selectedDay === day ? "bg-pink-100" : ""
-                            }`}
-                          >
-                            <Text
-                              className={`text-center ${
-                                selectedDay === day
-                                  ? "text-pink-600 font-semibold"
-                                  : "text-gray-700"
-                              }`}
-                            >
-                              {day}
-                            </Text>
-                          </Pressable>
-                        ))}
-                      </ScrollView>
-                    </View>
-                  </View>
+                    )}
+                  </>
+                )}
+              />
+            </View>
 
-                  <View className="flex-row justify-end">
+            {/* Confirm Password Field */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">
+                Confirm Password *
+              </Text>
+              <Controller
+                control={control}
+                name="confirmPassword"
+                rules={{
+                  required: "Please confirm your password",
+                  validate: (value) =>
+                    value === watchedPassword || "Passwords do not match",
+                }}
+                render={({
+                  field: { onChange, onBlur, value },
+                  fieldState: { error },
+                }) => (
+                  <>
+                    <View className="relative">
+                      <TextInput
+                        className={`border rounded-lg px-4 py-3 pr-12 text-base ${
+                          error ? "border-red-500" : "border-gray-300"
+                        }`}
+                        placeholder="Confirm your password"
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        value={value}
+                        secureTextEntry={!showConfirmPassword}
+                      />
+                      <TouchableOpacity
+                        onPress={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute right-4 top-3"
+                      >
+                        <Ionicons
+                          name={
+                            showConfirmPassword
+                              ? "eye-off-outline"
+                              : "eye-outline"
+                          }
+                          size={20}
+                          color="#6b7280"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    {error && (
+                      <Text className="text-red-500 text-sm mt-1">
+                        {error.message}
+                      </Text>
+                    )}
+                  </>
+                )}
+              />
+            </View>
+
+            {/* Terms Agreement */}
+            <View>
+              <Controller
+                control={control}
+                name="agreeTerms"
+                rules={{
+                  required: "You must agree to the terms and conditions",
+                }}
+                render={({
+                  field: { onChange, value },
+                  fieldState: { error },
+                }) => (
+                  <>
                     <TouchableOpacity
-                      onPress={handleDateCancel}
-                      className="px-4 py-2 rounded-lg bg-gray-200 mr-3"
+                      onPress={() => onChange(!value)}
+                      className="flex-row items-center space-x-3"
                     >
-                      <Text className="text-gray-700">Cancel</Text>
+                      <View
+                        className={`w-6 h-6 border-2 rounded ${
+                          value
+                            ? "bg-pink-500 border-pink-500"
+                            : "border-gray-300"
+                        } items-center justify-center`}
+                      >
+                        {value && (
+                          <Ionicons name="checkmark" size={16} color="white" />
+                        )}
+                      </View>
+                      <Text className="text-sm text-gray-700 flex-1">
+                        I agree to the{" "}
+                        <Text className="text-pink-500 underline">
+                          Terms and Conditions
+                        </Text>{" "}
+                        and{" "}
+                        <Text className="text-pink-500 underline">
+                          Privacy Policy
+                        </Text>
+                      </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={handleDateConfirm}
-                      className="px-4 py-2 rounded-lg bg-pink-500"
-                    >
-                      <Text className="text-white">Confirm</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
+                    {error && (
+                      <Text className="text-red-500 text-sm mt-1">
+                        {error.message}
+                      </Text>
+                    )}
+                  </>
+                )}
+              />
+            </View>
+          </View>
+
+          {/* Submit Button */}
+          <TouchableOpacity
+            className={`mt-8 rounded-lg py-4 ${
+              loading ? "bg-pink-300" : "bg-pink-500"
+            }`}
+            onPress={handleSubmit(onSubmit)}
+            disabled={loading}
+          >
+            {loading ? (
+              <View className="flex-row items-center justify-center">
+                <ActivityIndicator size="small" color="white" />
+                <Text className="text-white font-semibold text-lg ml-2">
+                  Creating Account...
+                </Text>
               </View>
-            </Modal>
+            ) : (
+              <Text className="text-white font-semibold text-lg text-center">
+                Create Account
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Footer */}
+          <View className="mt-8 items-center">
+            <Text className="text-gray-600">
+              Already have an account?{" "}
+              <Text
+                className="text-pink-500 font-semibold"
+                onPress={() => router.push("/auth/login")}
+              >
+                Sign In
+              </Text>
+            </Text>
           </View>
         </View>
-
-        <View className="flex-row items-start mb-8">
-          <TouchableOpacity
-            onPress={() => setAgreeTerms(!agreeTerms)}
-            className="mr-3 mt-1"
-          >
-            <View
-              className={`w-5 h-5 rounded ${
-                agreeTerms ? "bg-pink-500" : "border-2 border-gray-300"
-              } items-center justify-center`}
-            >
-              {agreeTerms && <Text className="text-white text-xs">✓</Text>}
-            </View>
-          </TouchableOpacity>
-          <Text className="text-gray-600 text-sm flex-1">
-            I agree to Lunari{" "}
-            <Text className="text-pink-500">Terms & Conditions</Text>
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          className={`rounded-full py-4 ${
-            loading ? "bg-pink-300" : "bg-pink-500"
-          }`}
-          onPress={handleRegister}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white text-center text-lg font-semibold">
-              Sign up
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
+      <Toast />
     </SafeArea>
   );
 }

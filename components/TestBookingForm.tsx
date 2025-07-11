@@ -94,12 +94,12 @@ export const TestBookingForm: React.FC = () => {
       return;
     }
 
-    const phonePattern = /^(03|05|07|08|09)\d{8}$/;
+    const phonePattern = /^0\d{9}$/;
     if (!phonePattern.test(data.phone)) {
       Toast.show({
         type: "error",
         text1: "Invalid phone number",
-        text2: "Phone must be 10 digits and start with 03, 05, 07, 08, or 09",
+        text2: "Phone must start with 0 and have 10 digits",
       });
       return;
     }
@@ -112,7 +112,7 @@ export const TestBookingForm: React.FC = () => {
         note: data.note?.trim() || "",
         test_date: dayjs(data.test_date).format("YYYY-MM-DD"),
         test_package_id: Number(packageId),
-        customer_profile_id: 1, // This should come from user context/auth
+        customer_profile_id: 1,
       };
 
       const orderRes = await orderApi.createOrder(payload);
@@ -223,8 +223,8 @@ export const TestBookingForm: React.FC = () => {
                 rules={{
                   required: "Phone number is required",
                   pattern: {
-                    value: /^(03|05|07|08|09)\d{8}$/,
-                    message: "Invalid phone number format",
+                    value: /^0\d{9}$/,
+                    message: "Phone must start with 0 and have 10 digits",
                   },
                 }}
                 render={({
@@ -237,7 +237,7 @@ export const TestBookingForm: React.FC = () => {
                         error ? "border-red-500" : "border-gray-300"
                       }`}
                       keyboardType="phone-pad"
-                      placeholder="Enter your phone number"
+                      placeholder="Enter your phone number (e.g., 0123456789)"
                       onChangeText={onChange}
                       onBlur={onBlur}
                       value={value}

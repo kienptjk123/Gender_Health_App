@@ -7,7 +7,7 @@ import { blogApi } from "../../apis/blog";
 export default function BlogTab() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage] = useState(1);
   const router = useRouter();
 
   const fetchBlogs = async () => {

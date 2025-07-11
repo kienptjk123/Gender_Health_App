@@ -14,16 +14,6 @@ export interface LoginResponse {
   };
 }
 
-// Actual API response structure
-export interface AuthResponse {
-  message: string;
-  result: {
-    access_token: string;
-    refresh_token: string;
-    role: string;
-  };
-}
-
 // User model for login response
 export interface User {
   id: string;

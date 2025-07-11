@@ -1,39 +1,58 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { useEffect, useState, useCallback, useRef } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
+import { useAuth } from "@/contexts/AuthContext";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import Toast from "react-native-toast-message";
+
+interface OTPFormData {
+  otp: string;
+}
+
+let globalOTPNavigationBlock = false;
 
 export default function OTPVerification() {
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
-  const [resendTimer, setResendTimer] = useState(56);
+  const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const { verifyForgotPassword } = useAuth();
   const params = useLocalSearchParams();
   const email = params.email as string;
   const type = params.type as string;
 
-  // Prevent navigation on error with a ref
   const preventNavigation = useRef(false);
 
-  // Focus effect to reset navigation prevention
+  const { control, handleSubmit, watch, setValue } = useForm<OTPFormData>({
+    defaultValues: {
+      otp: "",
+    },
+  });
+
+  const watchedOTP = watch("otp");
+
+  useEffect(() => {
+    globalOTPNavigationBlock = true;
+    return () => {
+      globalOTPNavigationBlock = false;
+    };
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      console.log(
-        "OTP Verification page focused - resetting navigation prevention"
-      );
       preventNavigation.current = false;
+      globalOTPNavigationBlock = true;
+
       return () => {
-        // Cleanup if needed
+        if (!preventNavigation.current) {
+          globalOTPNavigationBlock = false;
+        }
       };
     }, [])
   );
 
   useEffect(() => {
     if (!email) {
-      console.error("OTP Verification - No email provided");
       Toast.show({
         type: "error",
         text1: "Missing Email",
@@ -56,291 +75,222 @@ export default function OTPVerification() {
     }
   }, [resendTimer]);
 
-  const handleKeyPress = (key: string) => {
-    if (key === "delete") {
-      const newOtp = [...otp];
-      for (let i = newOtp.length - 1; i >= 0; i--) {
-        if (newOtp[i] !== "") {
-          newOtp[i] = "";
-          break;
-        }
-      }
-      setOtp(newOtp);
-    } else if (/^\d$/.test(key)) {
-      const newOtp = [...otp];
-      for (let i = 0; i < newOtp.length; i++) {
-        if (newOtp[i] === "") {
-          newOtp[i] = key;
-          break;
-        }
-      }
-      setOtp(newOtp);
-
-      // Only auto-verify if all digits are filled and not currently loading
-      if (newOtp.every((digit) => digit !== "") && !loading) {
-        console.log("Auto-verifying OTP:", newOtp.join(""));
-        handleVerifyOTP(newOtp.join(""));
-      }
-    }
-  };
-
-  const handleVerifyOTP = async (otpCode?: string) => {
-    const code = otpCode || otp.join("");
-    if (code.length !== 6) {
+  const onSubmit = async (data: OTPFormData) => {
+    if (data.otp.length !== 6) {
       Toast.show({
         type: "error",
         text1: "Invalid OTP",
-        text2: "Please enter all 6 digits",
+        text2: "Please enter a 6-digit OTP",
       });
       return;
     }
-
+    setLoading(true);
     try {
-      setLoading(true);
-
-      if (type === "forgot-password") {
-        await verifyForgotPassword({
-          email: email,
-          otp: code,
-        });
-
-        // Only navigate on successful verification
-        Toast.show({
-          type: "success",
-          text1: "OTP Verified! ✅",
-          text2: "Your identity has been verified",
-        });
-
-        setTimeout(() => {
-          try {
-            router.replace({
-              pathname: "/auth/reset-password",
-              params: { email },
-            } as any);
-          } catch (navError) {
-            console.error("Navigation error:", navError);
-            router.replace(
-              `/auth/reset-password?email=${encodeURIComponent(email)}` as any
-            );
-          }
-        }, 1000);
-      } else {
-        Toast.show({
-          type: "success",
-          text1: "OTP Verified",
-          text2: "Registration completed successfully!",
-        });
-
-        setTimeout(() => {
-          router.replace("/auth/login" as any);
-        }, 1000);
-      }
-    } catch (error: any) {
-      console.error("OTP verification error:", error);
-      console.error("ERROR DETAILS:", JSON.stringify(error, null, 2));
-
-      // Set navigation prevention flag
       preventNavigation.current = true;
+      await verifyForgotPassword({
+        email,
+        otp: data.otp,
+      });
+      Toast.show({
+        type: "success",
+        text1: "OTP Verified",
+        text2: "Redirecting to reset password...",
+      });
 
-      // Clear the OTP input when verification fails
-      setOtp(["", "", "", "", "", ""]);
+      setTimeout(() => {
+        preventNavigation.current = false;
+        globalOTPNavigationBlock = false;
+        router.push({
+          pathname: "/auth/reset-password",
+          params: { email, otp: data.otp },
+        });
+      }, 1500);
+    } catch (error: any) {
+      preventNavigation.current = true;
+      globalOTPNavigationBlock = true;
 
-      // Prevent any navigation by catching router calls
-      let errorMessage = "Invalid OTP code. Please try again.";
-
-      // Parse error message safely
-      if (error?.message) {
-        errorMessage = error.message.includes("OTP")
-          ? error.message
-          : "Invalid OTP code. Please try again.";
-      }
-
-      // Simple error message without detailed parsing to avoid any side effects
+      setValue("otp", "");
       Toast.show({
         type: "error",
         text1: "Verification Failed",
-        text2: errorMessage,
+        text2: error?.message || "Invalid OTP. Please try again.",
+        position: "top",
+        visibilityTime: 4000,
       });
-
-      // Explicitly log that we're staying on current page
-      console.log(
-        "=== CRITICAL: ERROR CAUGHT - Staying on OTP verification page, NEVER navigate ==="
-      );
-      console.log(
-        "=== Current route should remain: /auth/otp-verification ==="
-      );
-      console.log(
-        "=== Navigation prevention flag set:",
-        preventNavigation.current
-      );
-
-      // Extra safety: Prevent any potential navigation that might be triggered
-      // by ensuring we don't call any router methods or async operations that might trigger navigation
-
-      // DO NOT NAVIGATE - stay on current page for retry
-      // NO router.replace, router.push, or any navigation calls here
-
-      // Reset navigation prevention after a delay
-      setTimeout(() => {
-        preventNavigation.current = false;
-        console.log("Navigation prevention flag reset");
-      }, 3000);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResendOTP = () => {
-    setResendTimer(56);
+  const handleResendOTP = async () => {
+    if (!email) {
+      Toast.show({
+        type: "error",
+        text1: "Missing Email",
+        text2: "Email is required to resend OTP",
+      });
+      return;
+    }
     setCanResend(false);
-    Toast.show({
-      type: "success",
-      text1: "OTP Sent",
-      text2: "A new OTP has been sent to your email",
-    });
+    setResendTimer(60);
+    try {
+      Toast.show({
+        type: "success",
+        text1: "OTP Resent",
+        text2: "Please check your email for the new OTP",
+      });
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Resend Failed",
+        text2: "Please try again later",
+      });
+      setCanResend(true);
+      setResendTimer(0);
+    }
   };
 
-  const getMaskedEmail = (email: string) => {
-    if (!email) return "";
-    const [username, domain] = email.split("@");
-    if (username.length <= 2) {
-      return `${username}***@${domain}`;
-    }
-    const visibleChars = Math.min(2, username.length - 1);
-    const maskedUsername = username.substring(0, visibleChars) + "***";
-    return `${maskedUsername}@${domain}`;
+  const formatOTP = (text: string) => {
+    const cleaned = text.replace(/\D/g, "").slice(0, 6);
+    return cleaned;
   };
 
   return (
-    <SafeArea backgroundColor="#ffffff">
-      <View className="flex-1 px-6 py-4">
-        <View className="flex-row items-center mb-8 mt-4">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Text className="text-2xl">←</Text>
-          </TouchableOpacity>
+    <SafeArea>
+      <View className="flex-1 justify-center px-8 bg-white">
+        {/* Header */}
+        <View className="mb-8">
+          <Text className="text-3xl font-bold text-gray-900 text-center mb-2">
+            Verify OTP
+          </Text>
+          <Text className="text-gray-600 text-center">
+            Enter the 6-digit code sent to
+          </Text>
+          <Text className="text-pink-500 font-medium text-center mt-1">
+            {email}
+          </Text>
         </View>
 
-        <View className="items-center mb-12">
-          <View className="w-20 h-20 bg-pink-100 rounded-full items-center justify-center mb-6">
-            <Text className="text-3xl">📧</Text>
+        {/* Form */}
+        <View className="space-y-6">
+          {/* OTP Field */}
+          <View>
+            <Text className="text-sm font-medium text-gray-700 mb-2 text-center">
+              Enter OTP Code
+            </Text>
+            <Controller
+              control={control}
+              name="otp"
+              rules={{
+                required: "OTP is required",
+                minLength: {
+                  value: 6,
+                  message: "OTP must be 6 digits",
+                },
+                maxLength: {
+                  value: 6,
+                  message: "OTP must be 6 digits",
+                },
+              }}
+              render={({
+                field: { onChange, onBlur, value },
+                fieldState: { error },
+              }) => (
+                <>
+                  <TextInput
+                    className={`border rounded-lg px-4 py-4 text-2xl text-center font-mono tracking-widest ${
+                      error ? "border-red-500" : "border-gray-300 hi"
+                    }`}
+                    placeholder="000000"
+                    onChangeText={(text) => {
+                      const formatted = formatOTP(text);
+                      onChange(formatted);
+                    }}
+                    onBlur={onBlur}
+                    value={value}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    autoFocus={true}
+                  />
+                  {error && (
+                    <Text className="text-red-500 text-sm mt-1 text-center">
+                      {error.message}
+                    </Text>
+                  )}
+                </>
+              )}
+            />
           </View>
 
-          <Text className="text-3xl font-bold text-gray-800 text-center mb-4">
-            Verification
-          </Text>
-
-          <Text className="text-gray-600 text-center text-base mb-2">
-            We have sent the verification code to
-          </Text>
-          <Text className="text-gray-800 font-medium text-base">
-            {getMaskedEmail(email)}
-          </Text>
-        </View>
-
-        <View className="mb-8">
-          <View className="flex-row justify-center space-x-3 mb-8">
-            {otp.map((digit, index) => (
+          {/* OTP Progress */}
+          <View className="flex-row justify-center space-x-3">
+            {[0, 1, 2, 3, 4, 5].map((index) => (
               <View
                 key={index}
-                className="w-12 h-12 border border-gray-200 rounded-lg items-center justify-center bg-gray-50"
+                className={`w-12 h-12 rounded-lg border-2 items-center justify-center ${
+                  watchedOTP[index]
+                    ? "border-pink-500 bg-pink-50"
+                    : "border-gray-300"
+                }`}
               >
-                <Text className="text-xl font-semibold text-gray-800">
-                  {digit}
+                <Text
+                  className={`text-xl font-bold ${
+                    watchedOTP[index] ? "text-pink-500" : "text-gray-400"
+                  }`}
+                >
+                  {watchedOTP[index] || "•"}
                 </Text>
               </View>
             ))}
           </View>
 
-          <View className="flex-row justify-center mb-6">
-            <Text className="text-gray-600">Didn&apos;t receive code? </Text>
-            <TouchableOpacity
-              onPress={canResend ? handleResendOTP : undefined}
-              disabled={!canResend}
-            >
-              <Text
-                className={`font-medium ${
-                  canResend ? "text-pink-500" : "text-gray-400"
-                }`}
-              >
-                {canResend ? "Resend" : `Resend (${resendTimer}s)`}
+          {/* Resend OTP */}
+          <View className="items-center">
+            {canResend ? (
+              <TouchableOpacity onPress={handleResendOTP}>
+                <Text className="text-pink-500 font-medium">Resend OTP</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text className="text-gray-500">
+                Resend OTP in {resendTimer}s
               </Text>
-            </TouchableOpacity>
+            )}
           </View>
         </View>
 
-        {/* Keypad */}
-        <View className="flex-1 justify-end mb-4">
-          <View className="space-y-4">
-            <View className="flex-row justify-center space-x-8">
-              {[1, 2, 3].map((num) => (
-                <TouchableOpacity
-                  key={num}
-                  className="w-16 h-16 items-center justify-center"
-                  onPress={() => handleKeyPress(num.toString())}
-                >
-                  <Text className="text-2xl font-medium text-gray-800">
-                    {num}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View className="flex-row justify-center space-x-8">
-              {[4, 5, 6].map((num) => (
-                <TouchableOpacity
-                  key={num}
-                  className="w-16 h-16 items-center justify-center"
-                  onPress={() => handleKeyPress(num.toString())}
-                >
-                  <Text className="text-2xl font-medium text-gray-800">
-                    {num}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View className="flex-row justify-center space-x-8">
-              {[7, 8, 9].map((num) => (
-                <TouchableOpacity
-                  key={num}
-                  className="w-16 h-16 items-center justify-center"
-                  onPress={() => handleKeyPress(num.toString())}
-                >
-                  <Text className="text-2xl font-medium text-gray-800">
-                    {num}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View className="flex-row justify-center space-x-8">
-              <View className="w-16 h-16" />
-              <TouchableOpacity
-                className="w-16 h-16 items-center justify-center"
-                onPress={() => handleKeyPress("0")}
-              >
-                <Text className="text-2xl font-medium text-gray-800">0</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="w-16 h-16 items-center justify-center"
-                onPress={() => handleKeyPress("delete")}
-              >
-                <Text className="text-2xl font-medium text-gray-800">⌫</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            className="bg-pink-500 rounded-full py-4 mt-8"
-            onPress={() => handleVerifyOTP()}
-            disabled={loading}
+        {/* Submit Button */}
+        <TouchableOpacity
+          className={`mt-8 rounded-lg py-4 ${
+            loading || watchedOTP.length !== 6 ? "bg-gray-300" : "bg-pink-500"
+          }`}
+          onPress={handleSubmit(onSubmit)}
+          disabled={loading || watchedOTP.length !== 6}
+        >
+          <Text
+            className={`font-semibold text-lg text-center ${
+              loading || watchedOTP.length !== 6
+                ? "text-gray-500"
+                : "text-white"
+            }`}
           >
-            <Text className="text-white text-center text-lg font-semibold">
-              {loading ? "Verifying..." : "Continue"}
+            {loading ? "Verifying..." : "Verify OTP"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Footer */}
+        <View className="mt-8 items-center">
+          <Text className="text-gray-600">
+            Didn&apos;t receive the code?{" "}
+            <Text
+              className="text-pink-500 font-semibold"
+              onPress={() => router.back()}
+            >
+              Go Back
             </Text>
-          </TouchableOpacity>
+          </Text>
         </View>
       </View>
+      <Toast />
     </SafeArea>
   );
 }
