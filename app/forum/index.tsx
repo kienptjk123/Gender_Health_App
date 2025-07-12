@@ -1,21 +1,21 @@
-import React, {
+import { questionApi, voteApi } from "@/apis/forum";
+import { useAuth } from "@/contexts/AuthContext";
+import { QuestionData } from "@/models/forum";
+import * as ImagePicker from "expo-image-picker";
+import { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
-  RefreshControl,
-  Image,
-  TextInput,
-  Modal,
-  Alert,
 } from "react-native";
-import { useState, useEffect, useCallback } from "react";
-import { questionApi, voteApi } from "@/apis/forum";
-import { QuestionData } from "@/models/forum";
-import { useAuth } from "@/contexts/AuthContext";
 import Toast from "react-native-toast-message";
-import * as ImagePicker from "expo-image-picker";
 
 export default function ForumTab() {
   const { user } = useAuth();
