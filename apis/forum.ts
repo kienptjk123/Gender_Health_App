@@ -108,6 +108,14 @@ export const voteApi = {
     return (response.data as any).data as VoteData;
   },
 
+  update: async (
+    id: number,
+    payload: { vote_type: "UP" | "DOWN" }
+  ): Promise<VoteData> => {
+    const response = await apiService.put(`/votes/update/${id}`, payload);
+    return (response.data as any).data as VoteData;
+  },
+
   delete: async (id: number): Promise<void> => {
     await apiService.delete(`/votes/delete/${id}`);
   },

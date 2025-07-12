@@ -14,15 +14,23 @@ export interface LoginResponse {
   };
 }
 
-// User model for login response
+// User model for login response - Updated to match API structure
 export interface User {
-  id: string;
-  name: string;
+  id: number;
   email: string;
+  role: string;
+  status: string;
+  customer_profile_id: number;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  bio?: string;
+  location?: string;
+  username: string;
   avatar?: string;
-  phone?: string;
-  role?: string;
-  date_of_birth?: string; // ISO 8601 format
-  created_at?: string;
-  updated_at?: string;
+  coverPhoto?: string;
+  date_of_birth?: string;
+  website?: string;
+  phone_number?: string;
+  description?: string;
 }

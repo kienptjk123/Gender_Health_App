@@ -83,7 +83,7 @@ export default function HomeScreen() {
               Medications
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity className="bg-orange-500 rounded-xl p-4 flex-1 min-w-[45%]">
+          <TouchableOpacity className="bg-pink-500 rounded-xl p-4 flex-1 min-w-[45%]">
             <Text className="text-white font-semibold text-center">
               Exercise
             </Text>

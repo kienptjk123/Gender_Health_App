@@ -367,6 +367,31 @@ export class AuthService {
       throw error;
     }
   }
+
+  async getMyProfile(): Promise<any> {
+    try {
+      console.log("👤 Fetching user profile...");
+
+      const response = await apiService.get("/users/me");
+
+      console.log("✅ User profile fetched successfully:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ Get profile failed:", error);
+
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+
+      if (error.message?.includes("network")) {
+        throw new Error(
+          "Network error. Please check your internet connection."
+        );
+      }
+
+      throw error;
+    }
+  }
 }
 
 export const authService = new AuthService();

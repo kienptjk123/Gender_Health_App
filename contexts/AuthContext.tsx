@@ -72,29 +72,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log("Attempting login with credentials:", credentials);
 
       const response = await authService.login(credentials);
-      console.log("Login response:", response);
 
-      // Handle the actual API response structure
       if (response.message === "Login success" && response.result) {
         const { access_token, refresh_token, role } = response.result;
 
-        // Create user object from available data
-        const user: User = {
-          id: "temp_" + Date.now().toString(), // Temporary ID
-          name: credentials.email.split("@")[0], // Temporary name from email
-          email: credentials.email,
-          role: role || "CUSTOMER",
-          date_of_birth: undefined,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
+        // Store tokens first
         await AsyncStorage.setItem("access_token", access_token);
         await AsyncStorage.setItem("refresh_token", refresh_token);
-        await AsyncStorage.setItem("user_data", JSON.stringify(user));
-        setUser(user);
 
-        console.log("Login successful, user saved:", user);
+        try {
+          // Fetch complete user profile using the access token
+          console.log("Fetching user profile...");
+          const profileResponse = await authService.getMyProfile();
+
+          if (
+            profileResponse.message === "Get my profile success" &&
+            profileResponse.result
+          ) {
+            const userProfile = profileResponse.result;
+
+            // Create complete user object from API response
+            const user: User = {
+              id: userProfile.id,
+              email: userProfile.email,
+              role: userProfile.role,
+              status: userProfile.status,
+              customer_profile_id: userProfile.customer_profile_id,
+              created_at: userProfile.created_at,
+              updated_at: userProfile.updated_at,
+              name: userProfile.name,
+              bio: userProfile.bio,
+              location: userProfile.location,
+              username: userProfile.username,
+              avatar: userProfile.avatar,
+              coverPhoto: userProfile.coverPhoto,
+              date_of_birth: userProfile.date_of_birth,
+              website: userProfile.website,
+              phone_number: userProfile.phone_number,
+              description: userProfile.description,
+            };
+
+            await AsyncStorage.setItem("user_data", JSON.stringify(user));
+            setUser(user);
+            console.log("Login successful, complete user profile saved:", user);
+          } else {
+            throw new Error("Failed to fetch user profile");
+          }
+        } catch (profileError) {
+          console.log(profileError);
+        }
       } else {
         throw new Error(response.message || "Login failed");
       }

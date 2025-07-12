@@ -25,3 +25,27 @@ export interface ApiError {
   statusCode: number;
   details?: any;
 }
+
+// User Profile API Response
+export interface UserProfileResponse {
+  message: string;
+  result: {
+    id: number;
+    email: string;
+    role: string;
+    status: string;
+    customer_profile_id: number;
+    created_at: string;
+    updated_at: string;
+    name: string;
+    bio?: string;
+    location?: string;
+    username: string;
+    avatar?: string;
+    coverPhoto?: string;
+    date_of_birth?: string;
+    website?: string;
+    phone_number?: string;
+    description?: string;
+  };
+}

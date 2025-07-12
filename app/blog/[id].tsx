@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   StatusBar,
-  Dimensions,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { blogApi } from "../../apis/blog";
@@ -84,9 +83,15 @@ export default function BlogDetail() {
   if (loading) {
     return (
       <SafeArea>
-        <View className="flex-1 justify-center items-center bg-white">
-          <ActivityIndicator size="large" color="#EC4899" />
-          <Text className="text-gray-500 mt-2">Loading blog...</Text>
+        <View className="flex-1 justify-center items-center bg-pink-50">
+          <View className="bg-white p-8 rounded-3xl shadow-lg border border-pink-100 mx-4">
+            <View className="w-16 h-16 bg-pink-100 rounded-full items-center justify-center mb-4 mx-auto">
+              <ActivityIndicator size="large" color="#EC4899" />
+            </View>
+            <Text className="text-pink-600 font-semibold text-center">
+              Loading blog...
+            </Text>
+          </View>
         </View>
       </SafeArea>
     );
@@ -95,26 +100,28 @@ export default function BlogDetail() {
   if (error) {
     return (
       <SafeArea>
-        <View className="flex-1 justify-center items-center bg-white px-4">
-          <Text className="text-4xl mb-4">😔</Text>
-          <Text className="text-lg font-semibold text-gray-800 mb-2">
-            Error Loading Blog
-          </Text>
-          <Text className="text-gray-600 text-center mb-4">{error}</Text>
-          <TouchableOpacity
-            onPress={() => {
-              fetchBlog();
-            }}
-            className="bg-rose-500 px-6 py-3 rounded-lg mb-2"
-          >
-            <Text className="text-white font-semibold">Retry</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="bg-gray-500 px-6 py-3 rounded-lg"
-          >
-            <Text className="text-white font-semibold">Go Back</Text>
-          </TouchableOpacity>
+        <View className="flex-1 justify-center items-center bg-pink-50 px-4">
+          <View className="bg-white p-8 rounded-3xl shadow-lg border border-pink-100 items-center">
+            <Text className="text-4xl mb-4">😔</Text>
+            <Text className="text-lg font-semibold text-pink-600 mb-2">
+              Error Loading Blog
+            </Text>
+            <Text className="text-pink-400 text-center mb-4">{error}</Text>
+            <TouchableOpacity
+              onPress={() => {
+                fetchBlog();
+              }}
+              className="bg-pink-500 px-6 py-3 rounded-xl mb-2 shadow-md"
+            >
+              <Text className="text-white font-semibold">Retry</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="bg-pink-200 px-6 py-3 rounded-xl"
+            >
+              <Text className="text-pink-600 font-semibold">Go Back</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeArea>
     );
@@ -125,20 +132,22 @@ export default function BlogDetail() {
     console.log("❌ Blog is null/undefined, rendering not found");
     return (
       <SafeArea>
-        <View className="flex-1 justify-center items-center bg-white px-4">
-          <Text className="text-4xl mb-4">📰</Text>
-          <Text className="text-lg font-semibold text-gray-800 mb-2">
-            Blog not found
-          </Text>
-          <Text className="text-gray-600 text-center mb-4">
-            The blog you are looking for does not exist.
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="bg-rose-500 px-6 py-3 rounded-lg"
-          >
-            <Text className="text-white font-semibold">Go Back</Text>
-          </TouchableOpacity>
+        <View className="flex-1 justify-center items-center bg-pink-50 px-4">
+          <View className="bg-white p-8 rounded-3xl shadow-lg border border-pink-100 items-center">
+            <Text className="text-4xl mb-4">📰</Text>
+            <Text className="text-lg font-semibold text-pink-600 mb-2">
+              Blog not found
+            </Text>
+            <Text className="text-pink-400 text-center mb-4">
+              The blog you are looking for does not exist.
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="bg-pink-500 px-6 py-3 rounded-xl shadow-md"
+            >
+              <Text className="text-white font-semibold">Go Back</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeArea>
     );
@@ -154,7 +163,7 @@ export default function BlogDetail() {
         backgroundColor="transparent"
         translucent
       />
-      <View className="flex-1 bg-gray-50">
+      <View className="flex-1 bg-pink-50">
         <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
@@ -170,7 +179,11 @@ export default function BlogDetail() {
               />
             )}
             <LinearGradient
-              colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.7)"]}
+              colors={[
+                "transparent",
+                "rgba(236,72,153,0.3)",
+                "rgba(236,72,153,0.7)",
+              ]}
               className="absolute inset-0"
             />
 
@@ -178,12 +191,12 @@ export default function BlogDetail() {
             <View className="absolute top-12 left-0 right-0 flex-row justify-between items-center px-4">
               <TouchableOpacity
                 onPress={() => router.back()}
-                className="w-10 h-10 rounded-full bg-black/30 justify-center items-center"
+                className="w-10 h-10 rounded-full bg-white/90 justify-center items-center shadow-md"
               >
-                <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+                <Ionicons name="arrow-back" size={24} color="#EC4899" />
               </TouchableOpacity>
-              <TouchableOpacity className="w-10 h-10 rounded-full bg-black/30 justify-center items-center">
-                <Ionicons name="bookmark-outline" size={24} color="#FFFFFF" />
+              <TouchableOpacity className="w-10 h-10 rounded-full bg-white/90 justify-center items-center shadow-md">
+                <Ionicons name="bookmark-outline" size={24} color="#EC4899" />
               </TouchableOpacity>
             </View>
           </View>
@@ -213,30 +226,30 @@ export default function BlogDetail() {
             </Text>
 
             {/* Metadata */}
-            <View className="bg-gray-50 rounded-2xl p-4 mb-6">
+            <View className="bg-pink-50 rounded-2xl p-4 mb-6 border border-pink-100">
               <View className="flex-row items-center mb-3">
                 {blog.staff?.avatar && (
                   <Image
                     source={{ uri: blog.staff.avatar }}
-                    className="w-12 h-12 rounded-full mr-3 border-2 border-pink-100"
+                    className="w-12 h-12 rounded-full mr-3 border-2 border-pink-200"
                   />
                 )}
                 <View className="flex-1">
                   <View className="flex-row items-center mb-1">
-                    <Ionicons name="person" size={14} color="#6B7280" />
+                    <Ionicons name="person" size={14} color="#EC4899" />
                     <Text className="text-gray-900 font-semibold ml-1.5">
                       {blog.staff?.name || "Unknown Author"}
                     </Text>
                   </View>
-                  <Text className="text-pink-600 text-sm font-medium">
+                  <Text className="text-pink-500 text-sm font-medium">
                     Chuyên gia sức khỏe giới tính
                   </Text>
                 </View>
               </View>
 
               <View className="flex-row items-center">
-                <Ionicons name="calendar-outline" size={14} color="#6B7280" />
-                <Text className="text-gray-600 text-sm ml-1.5">
+                <Ionicons name="calendar-outline" size={14} color="#EC4899" />
+                <Text className="text-pink-600 text-sm ml-1.5 font-medium">
                   {formatDate(blog.date)}
                 </Text>
               </View>
@@ -255,8 +268,8 @@ export default function BlogDetail() {
                 {getContentText(blog.content) || "Không có nội dung"}
               </Text>
 
-              <TouchableOpacity className="flex-row items-center">
-                <Text className="text-pink-500 font-semibold mr-2">
+              <TouchableOpacity className="flex-row items-center bg-pink-100 px-3 py-2 rounded-full">
+                <Text className="text-pink-600 font-semibold mr-2">
                   Tiếp tục đọc
                 </Text>
                 <Ionicons name="arrow-forward" size={16} color="#EC4899" />
@@ -265,24 +278,29 @@ export default function BlogDetail() {
 
             {/* Author Bio */}
             {blog.staff && (
-              <View className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-5 mb-8 border border-pink-100">
-                <Text className="text-xl font-bold text-gray-900 mb-4">
-                  Về tác giả
-                </Text>
+              <View className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-5 mb-8 border-2 border-pink-200 shadow-sm">
+                <View className="flex-row items-center mb-4">
+                  <Ionicons name="person-circle" size={24} color="#EC4899" />
+                  <Text className="text-xl font-bold text-pink-600 ml-2">
+                    Về tác giả
+                  </Text>
+                </View>
                 <View className="flex-row items-start">
                   {blog.staff.avatar && (
                     <Image
                       source={{ uri: blog.staff.avatar }}
-                      className="w-16 h-16 rounded-full mr-4 border-2 border-pink-200"
+                      className="w-16 h-16 rounded-full mr-4 border-3 border-pink-300"
                     />
                   )}
                   <View className="flex-1">
                     <Text className="text-lg font-semibold text-gray-900 mb-1">
                       {blog.staff.name}
                     </Text>
-                    <Text className="text-pink-600 text-sm font-semibold mb-2">
-                      Chuyên gia sức khỏe giới tính
-                    </Text>
+                    <View className="bg-pink-100 px-3 py-1 rounded-full self-start mb-2">
+                      <Text className="text-pink-700 text-sm font-semibold">
+                        Chuyên gia sức khỏe giới tính
+                      </Text>
+                    </View>
                     <Text className="text-gray-700 text-sm leading-5">
                       Chuyên gia giàu kinh nghiệm trong lĩnh vực sức khỏe giới
                       tính, tư vấn và hỗ trợ cộng đồng hiểu rõ hơn về sức khỏe
@@ -295,21 +313,24 @@ export default function BlogDetail() {
 
             {/* Related Articles */}
             <View className="mt-4">
-              <Text className="text-2xl font-bold text-gray-900 mb-4">
-                Bài viết liên quan
-              </Text>
+              <View className="flex-row items-center mb-4">
+                <Ionicons name="library" size={24} color="#EC4899" />
+                <Text className="text-2xl font-bold text-pink-600 ml-2">
+                  Bài viết liên quan
+                </Text>
+              </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {[1, 2, 3].map((item) => (
                   <TouchableOpacity
                     key={item}
-                    className="w-72 bg-white rounded-2xl mr-4 shadow-lg"
+                    className="w-72 bg-white rounded-2xl mr-4 shadow-lg border border-pink-100"
                   >
                     <LinearGradient
-                      colors={["#EC4899", "#F97316"]}
+                      colors={["#EC4899", "#F472B6"]}
                       className="h-36 rounded-t-2xl justify-end p-4"
                     >
                       <View className="self-start">
-                        <Text className="bg-white/20 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                        <Text className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
                           SỨC KHỎE
                         </Text>
                       </View>
@@ -323,9 +344,12 @@ export default function BlogDetail() {
                         hữu ích.
                       </Text>
                       <View className="flex-row justify-between items-center">
-                        <Text className="text-gray-400 text-xs">
-                          5 phút đọc
-                        </Text>
+                        <View className="flex-row items-center bg-pink-50 px-2 py-1 rounded-full">
+                          <Ionicons name="time" size={12} color="#EC4899" />
+                          <Text className="text-pink-600 text-xs ml-1 font-medium">
+                            5 phút đọc
+                          </Text>
+                        </View>
                         <Ionicons
                           name="arrow-forward"
                           size={16}

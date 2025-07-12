@@ -24,7 +24,17 @@ export interface QuestionData {
 export interface QuestionRequest {
   title: string;
   content: string;
-  image?: File;
+  image?: string; // Changed from File to string for React Native
+}
+
+export interface QuestionResponse {
+  message: string;
+  data: QuestionData[];
+}
+
+export interface QuestionCreateResponse {
+  message: string;
+  data: QuestionData;
 }
 
 export interface ReplyData {
@@ -63,4 +73,26 @@ export interface VoteRequest {
   vote_type: "UP" | "DOWN";
   question_id?: number;
   reply_id?: number;
+}
+
+export interface CreateVoteReqBody {
+  vote_type: "UP" | "DOWN";
+  question_id?: number;
+  reply_id?: number;
+}
+
+export interface UpdateVoteReqBody {
+  vote_type: "UP" | "DOWN";
+}
+
+export interface VoteParams {
+  id: string;
+}
+
+// Enhanced VoteData to include user's current vote
+export interface UserVoteState {
+  hasVoted: boolean;
+  userVoteType?: "UP" | "DOWN";
+  userVoteId?: number;
+  totalVotes: number;
 }
