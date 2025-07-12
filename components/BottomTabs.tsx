@@ -1,8 +1,8 @@
-import React from "react";
-import { View, TouchableOpacity, Text, Animated } from "react-native";
+import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
+import React from "react";
+import { Animated, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 
 const TabIcon = ({
   iconName,
@@ -94,11 +94,11 @@ export default function BottomTabs() {
       isActive: pathname === "/" || pathname.includes("/(tabs)"),
     },
     {
-      name: "Calendar",
-      iconName: "calendar",
+      name: "Cycle",
+      iconName: "flower",
       iconFamily: "Ionicons" as const,
-      route: "/(tabs)/calendar",
-      isActive: pathname.includes("/calendar"),
+      route: "/(tabs)/menstrualCycle",
+      isActive: pathname.includes("/menstrualCycle"),
     },
     {
       name: "Blog",
