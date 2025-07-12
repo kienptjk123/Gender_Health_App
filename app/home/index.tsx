@@ -112,11 +112,33 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* My Appointment Section */}
-      <View className="px-5 pb-24">
-        {customerProfile && (
-          <UpcomingAppointmentSection customerId={customerProfile.id} />
-        )}
+      {/* Quick Actions */}
+      <View className="mt-8 mb-6">
+        <Text className="text-xl font-semibold text-gray-800 mb-4">
+          Quick Actions
+        </Text>
+        <View className="flex-row flex-wrap gap-3">
+          <TouchableOpacity className="bg-pink-500 rounded-xl p-4 flex-1 min-w-[45%]">
+            <Text className="text-white font-semibold text-center">
+              Log Period
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="bg-purple-500 rounded-xl p-4 flex-1 min-w-[45%]">
+            <Text className="text-white font-semibold text-center">
+              Symptoms
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="bg-green-500 rounded-xl p-4 flex-1 min-w-[45%]">
+            <Text className="text-white font-semibold text-center">
+              Medications
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="bg-pink-500 rounded-xl p-4 flex-1 min-w-[45%]">
+            <Text className="text-white font-semibold text-center">
+              Exercise
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
