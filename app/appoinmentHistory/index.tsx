@@ -1,11 +1,15 @@
 import { authService } from "@/apis";
 import { appointmentApi } from "@/apis/appointment.api";
+import { SafeAreaView } from "@/components/SafeArea";
 import { Appointment } from "@/models/appointment.type";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
+  Linking,
   RefreshControl,
   ScrollView,
   Text,
@@ -44,12 +48,12 @@ export default function AppointmentHistoryScreen() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status) {
       case "COMPLETED":
         return "bg-green-100 text-green-800";
       case "CANCELED":
         return "bg-red-100 text-red-800";
-      case "scheduled":
+      case "SCHEDULED":
         return "bg-blue-100 text-blue-800";
       case "IN_PROGRESS":
         return "bg-yellow-100 text-yellow-800";
@@ -59,12 +63,12 @@ export default function AppointmentHistoryScreen() {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status) {
       case "COMPLETED":
         return "✅";
       case "CANCELED":
         return "❌";
-      case "scheduled":
+      case "SCHEDULED":
         return "📅";
       case "IN_PROGRESS":
         return "🔄";
@@ -74,13 +78,89 @@ export default function AppointmentHistoryScreen() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Invalid Date";
+
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "UTC", // Use UTC to avoid timezone conversion
+      });
+    } catch {
+      return "Invalid Date";
+    }
+  };
+
+  const formatScheduledDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Invalid Date";
+
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC", // Use UTC to avoid timezone conversion
+      });
+    } catch {
+      return "Invalid Date";
+    }
+  };
+
+  const handleJoinMeeting = async (meetingLink: string) => {
+    try {
+      const supported = await Linking.canOpenURL(meetingLink);
+      if (supported) {
+        await Linking.openURL(meetingLink);
+      } else {
+        Alert.alert(
+          "Cannot Open Link",
+          "Unable to open the meeting link. Please check if you have a browser installed or copy the link manually.",
+          [{ text: "OK" }]
+        );
+      }
+    } catch (error) {
+      console.error("Error opening meeting link:", error);
+      Alert.alert(
+        "Error",
+        "Failed to open the meeting link. Please try again or copy the link manually.",
+        [{ text: "OK" }]
+      );
+    }
+  };
+
+  const getActualStatus = (appointment: Appointment) => {
+    const currentTime = new Date(Date.now() + 7 * 60 * 60 * 1000);
+
+    if (appointment.endedAt) {
+      const endTime = new Date(appointment.endedAt);
+
+      if (currentTime > endTime) {
+        return "COMPLETED";
+      }
+    }
+
+    if (appointment.startedAt && appointment.endedAt) {
+      const startTime = new Date(appointment.startedAt);
+      if (currentTime > startTime) {
+        return "IN_PROGRESS";
+      }
+    }
+
+    return appointment.status;
+  };
+
+  const shouldShowJoinButton = (appointment: Appointment) => {
+    const actualStatus = getActualStatus(appointment);
+    return (
+      actualStatus.toLowerCase() === "IN_PROGRESS" && appointment.meetingLink
+    );
   };
 
   const renderAppointmentCard = (appointment: Appointment) => (
@@ -111,11 +191,12 @@ export default function AppointmentHistoryScreen() {
         <View className="items-end">
           <View
             className={`px-2 py-1 rounded-full ${getStatusColor(
-              appointment.status
+              getActualStatus(appointment)
             )}`}
           >
             <Text className="text-xs font-medium">
-              {getStatusIcon(appointment.status)} {appointment.status}
+              {getStatusIcon(getActualStatus(appointment))}{" "}
+              {getActualStatus(appointment)}
             </Text>
           </View>
         </View>
@@ -126,7 +207,7 @@ export default function AppointmentHistoryScreen() {
         <View className="flex-row items-center">
           <Text className="text-gray-600 text-sm mr-2">📅</Text>
           <Text className="text-gray-700 text-sm">
-            Scheduled: {formatDate(appointment.scheduledAt)}
+            Scheduled: {formatScheduledDate(appointment.scheduleAt)}
           </Text>
         </View>
 
@@ -134,7 +215,7 @@ export default function AppointmentHistoryScreen() {
           <View className="flex-row items-center">
             <Text className="text-gray-600 text-sm mr-2">🕐</Text>
             <Text className="text-gray-700 text-sm">
-              Started: {formatDate(appointment.startedAt)}
+              Start: {formatDate(appointment.startedAt)}
             </Text>
           </View>
         )}
@@ -143,7 +224,7 @@ export default function AppointmentHistoryScreen() {
           <View className="flex-row items-center">
             <Text className="text-gray-600 text-sm mr-2">🏁</Text>
             <Text className="text-gray-700 text-sm">
-              Ended: {formatDate(appointment.endedAt)}
+              End: {formatDate(appointment.endedAt)}
             </Text>
           </View>
         )}
@@ -213,14 +294,16 @@ export default function AppointmentHistoryScreen() {
       )}
 
       {/* Meeting link for scheduled appointments */}
-      {appointment.status.toLowerCase() === "scheduled" &&
-        appointment.meetingLink && (
-          <TouchableOpacity className="mt-3 bg-pink-500 rounded-lg p-3">
-            <Text className="text-white text-center font-medium">
-              Join Meeting
-            </Text>
-          </TouchableOpacity>
-        )}
+      {shouldShowJoinButton(appointment) && (
+        <TouchableOpacity
+          className="mt-3 bg-pink-500 rounded-lg p-3"
+          onPress={() => handleJoinMeeting(appointment.meetingLink)}
+        >
+          <Text className="text-white text-center font-medium">
+            Join Meeting
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -234,20 +317,17 @@ export default function AppointmentHistoryScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-white px-6 py-4 shadow-sm">
-        <View className="flex-row items-center">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="mr-4 p-2 -ml-2"
-          >
-            <Text className="text-xl">←</Text>
-          </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-800">
-            Appointment History
-          </Text>
-        </View>
+      <View className="flex-row items-center justify-between px-4 py-3 bg-white shadow-sm">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
+        >
+          <Ionicons name="chevron-back" size={24} color="#374151" />
+        </TouchableOpacity>
+        <Text className="text-lg font-semibold text-gray-800">Appointment</Text>
+        <View className="w-10" />
       </View>
 
       {/* Content */}
@@ -273,7 +353,7 @@ export default function AppointmentHistoryScreen() {
               <Text className="text-2xl font-bold text-green-500">
                 {
                   appointments.filter(
-                    (a) => a.status.toLowerCase() === "completed"
+                    (a) => getActualStatus(a).toLowerCase() === "completed"
                   ).length
                 }
               </Text>
@@ -285,7 +365,7 @@ export default function AppointmentHistoryScreen() {
               <Text className="text-2xl font-bold text-blue-500">
                 {
                   appointments.filter(
-                    (a) => a.status.toLowerCase() === "scheduled"
+                    (a) => getActualStatus(a).toLowerCase() === "scheduled"
                   ).length
                 }
               </Text>
@@ -322,13 +402,13 @@ export default function AppointmentHistoryScreen() {
             {appointments
               .sort(
                 (a, b) =>
-                  new Date(b.scheduledAt).getTime() -
-                  new Date(a.scheduledAt).getTime()
+                  new Date(b.scheduleAt).getTime() -
+                  new Date(a.scheduleAt).getTime()
               )
               .map(renderAppointmentCard)}
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

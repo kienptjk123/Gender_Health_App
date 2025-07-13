@@ -5,10 +5,7 @@ import { useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  Consultant,
-  Schedule,
-} from "@/models/BookingConsultant/bookingConsult.type";
+import { Consultant } from "@/models/BookingConsultant/bookingConsult.type";
 import BookingConfirmation from "./BookingConfirmation";
 
 interface ConsultantDetailScreenProps {
@@ -22,65 +19,20 @@ export default function ConsultantDetailScreen({
   customerProfileId,
   onBack,
 }: ConsultantDetailScreenProps) {
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [schedulesByDate, setSchedulesByDate] = useState(
-    consultant.schedulesByDate
-  );
   const [showBookingConfirmation, setShowBookingConfirmation] = useState(false);
-  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
-    null
-  );
-
-  const handleBooking = (scheduleId: number) => {
-    // Find the schedule object
-    const schedule = Object.values(schedulesByDate)
-      .flat()
-      .find((s) => s.id === scheduleId);
-
-    if (schedule) {
-      setSelectedSchedule(schedule);
-      setShowBookingConfirmation(true);
-    }
-  };
 
   const handleBookingSuccess = () => {
-    // Update local state to reflect the booking
-    if (selectedSchedule) {
-      const updated = { ...schedulesByDate };
-      for (const date in updated) {
-        updated[date] = updated[date].map((s) =>
-          s.id === selectedSchedule.id ? { ...s, status: "BOOKED" } : s
-        );
-      }
-      setSchedulesByDate(updated);
-    }
+    // Refresh the schedules by refetching or updating the state
+    // For now, we'll just close the modal and let the parent component handle refresh
+    setShowBookingConfirmation(false);
   };
 
   const getAvailableSlots = () => {
     let total = 0;
-    Object.values(schedulesByDate).forEach((schedules) => {
+    Object.values(consultant.schedulesByDate).forEach((schedules) => {
       total += schedules.filter((s) => s.status === "AVAILABLE").length;
     });
     return total;
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  const formatShortDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   return (
@@ -263,90 +215,13 @@ export default function ConsultantDetailScreen({
           </Text>
 
           {getAvailableSlots() > 0 ? (
-            <View>
-              {/* Date Selection */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="mb-4"
-              >
-                <View className="flex-row space-x-3">
-                  {Object.keys(schedulesByDate).map((date) => {
-                    const hasAvailable = schedulesByDate[date].some(
-                      (s) => s.status === "AVAILABLE"
-                    );
-                    if (!hasAvailable) return null;
-
-                    return (
-                      <TouchableOpacity
-                        key={date}
-                        onPress={() =>
-                          setSelectedDate(selectedDate === date ? null : date)
-                        }
-                        className={`px-4 py-3 rounded-xl min-w-24 items-center ${
-                          selectedDate === date ? "bg-pink-500" : "bg-gray-100"
-                        }`}
-                      >
-                        <Text
-                          className={`text-sm font-medium ${
-                            selectedDate === date
-                              ? "text-white"
-                              : "text-gray-700"
-                          }`}
-                        >
-                          {formatShortDate(date)}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </ScrollView>
-
-              {/* Time Slots */}
-              {selectedDate ? (
-                <View>
-                  <Text className="text-base font-medium text-gray-800 mb-3">
-                    {formatDate(selectedDate)}
-                  </Text>
-                  <View className="space-y-2">
-                    {schedulesByDate[selectedDate]
-                      .filter((s) => s.status === "AVAILABLE")
-                      .map((schedule) => (
-                        <TouchableOpacity
-                          key={schedule.id}
-                          onPress={() => handleBooking(schedule.id)}
-                          className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex-row justify-between items-center"
-                          activeOpacity={0.7}
-                        >
-                          <View className="flex-1">
-                            <Text className="font-medium text-gray-800">
-                              {schedule.title}
-                            </Text>
-                            <Text className="text-gray-600 text-sm mt-1">
-                              {schedule.startTime} - {schedule.endTime}
-                            </Text>
-                            {schedule.description && (
-                              <Text className="text-gray-500 text-sm mt-1">
-                                {schedule.description}
-                              </Text>
-                            )}
-                          </View>
-                          <View className="bg-pink-500 px-4 py-2 rounded-xl">
-                            <Text className="text-white text-sm font-medium">
-                              Book
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                      ))}
-                  </View>
-                </View>
-              ) : (
-                <View className="bg-gray-50 p-4 rounded-xl">
-                  <Text className="text-gray-600 text-center">
-                    Select a date to view available time slots
-                  </Text>
-                </View>
-              )}
+            <View className="bg-gray-50 p-4 rounded-xl">
+              <Text className="text-gray-700 text-center font-medium">
+                {getAvailableSlots()} available slots
+              </Text>
+              <Text className="text-gray-500 text-center text-sm mt-1">
+                Click &quot;Book Now&quot; to choose your preferred time slot
+              </Text>
             </View>
           ) : (
             <View className="bg-gray-50 p-6 rounded-xl">
@@ -364,17 +239,31 @@ export default function ConsultantDetailScreen({
         <View className="h-6" />
       </ScrollView>
 
-      {/* Booking Confirmation Modal */}
-      {selectedSchedule && (
-        <BookingConfirmation
-          visible={showBookingConfirmation}
-          onClose={() => setShowBookingConfirmation(false)}
-          consultant={consultant}
-          schedule={selectedSchedule}
-          customerProfileId={customerProfileId}
-          onBookingSuccess={handleBookingSuccess}
-        />
+      {/* Book Now Button */}
+      {getAvailableSlots() > 0 && (
+        <View className="bg-white px-4 py-3 border-t border-gray-100">
+          <TouchableOpacity
+            onPress={() => setShowBookingConfirmation(true)}
+            className="bg-pink-500 py-4 rounded-2xl flex-row items-center justify-center"
+            activeOpacity={0.8}
+          >
+            <Ionicons name="calendar" size={20} color="white" />
+            <Text className="text-white text-lg font-semibold ml-2">
+              Book Now
+            </Text>
+          </TouchableOpacity>
+        </View>
       )}
+
+      {/* Booking Confirmation Modal */}
+      <BookingConfirmation
+        visible={showBookingConfirmation}
+        onClose={() => setShowBookingConfirmation(false)}
+        consultant={consultant}
+        customerProfileId={customerProfileId}
+        onBookingSuccess={handleBookingSuccess}
+        schedulesByDate={consultant.schedulesByDate}
+      />
     </SafeAreaView>
   );
 }

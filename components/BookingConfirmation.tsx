@@ -14,9 +14,11 @@ interface BookingConfirmationProps {
   visible: boolean;
   onClose: () => void;
   consultant: Consultant;
-  schedule: Schedule;
+  schedule?: Schedule | null;
   customerProfileId: number;
   onBookingSuccess?: () => void;
+  schedulesByDate?: Record<string, Schedule[]>;
+  onScheduleSelect?: (schedule: Schedule) => void;
 }
 
 const APPOINTMENT_TYPES = [{ id: "online", label: "Online", icon: "videocam" }];
@@ -28,31 +30,46 @@ export default function BookingConfirmation({
   schedule,
   customerProfileId,
   onBookingSuccess,
+  schedulesByDate,
+  onScheduleSelect,
 }: BookingConfirmationProps) {
   const [selectedReason] = useState("Menstrual Issues");
   const [appointmentType, setAppointmentType] = useState("online");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
+    schedule || null
+  );
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const day = date.getDate();
     const month = date.toLocaleDateString("en-US", { month: "2-digit" });
-    const time = schedule.startTime;
+    const time = selectedSchedule?.startTime || "";
 
     return { day, month, time };
   };
 
+  const handleScheduleSelect = (schedule: Schedule) => {
+    setSelectedSchedule(schedule);
+    onScheduleSelect?.(schedule);
+  };
+
   const handleBookNow = async () => {
+    if (!selectedSchedule) {
+      return;
+    }
+
     try {
       console.log(
         "Booking appointment for:",
-        schedule.id,
+        selectedSchedule.id,
         "by user:",
         customerProfileId
       );
       setIsLoading(true);
 
-      await bookConsultApi.bookSchedule(schedule.id, customerProfileId);
+      await bookConsultApi.bookSchedule(selectedSchedule.id, customerProfileId);
 
       Toast.show({
         type: "success",
@@ -74,7 +91,18 @@ export default function BookingConfirmation({
     }
   };
 
-  const { day, month, time } = formatDate(schedule.date);
+  const formatShortDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const { day, month, time } = selectedSchedule
+    ? formatDate(selectedSchedule.date)
+    : { day: 0, month: "", time: "" };
 
   // Calculate fees (these would typically come from your backend)
 
@@ -104,42 +132,143 @@ export default function BookingConfirmation({
           className="flex-1 px-6"
           showsVerticalScrollIndicator={false}
         >
-          {/* Date & Time Selection */}
-          <View className="mt-6">
-            <Text className="text-lg font-semibold text-gray-800 mb-4">
-              Select Date & Time
-            </Text>
+          {/* Slot Selection */}
+          {!selectedSchedule && schedulesByDate ? (
+            <View className="mt-6">
+              <Text className="text-lg font-semibold text-gray-800 mb-4">
+                Select Date & Time
+              </Text>
 
-            <View className="flex-row items-center space-x-4">
-              {/* Day */}
-              <View className="items-center">
-                <Text className="text-sm text-gray-600 mb-2">Day</Text>
-                <View className="w-16 h-16 bg-gray-100 rounded-2xl items-center justify-center">
-                  <Text className="text-2xl font-bold text-gray-800">
-                    {day}
+              {/* Date Selection */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="mb-4"
+              >
+                <View className="flex-row space-x-3">
+                  {Object.keys(schedulesByDate).map((date) => {
+                    const hasAvailable = schedulesByDate[date].some(
+                      (s) => s.status === "AVAILABLE"
+                    );
+                    if (!hasAvailable) return null;
+
+                    return (
+                      <TouchableOpacity
+                        key={date}
+                        onPress={() =>
+                          setSelectedDate(selectedDate === date ? null : date)
+                        }
+                        className={`px-4 py-3 rounded-xl min-w-24 items-center ${
+                          selectedDate === date ? "bg-pink-500" : "bg-gray-100"
+                        }`}
+                      >
+                        <Text
+                          className={`text-sm font-medium ${
+                            selectedDate === date
+                              ? "text-white"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {formatShortDate(date)}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+
+              {/* Time Slots */}
+              {selectedDate && (
+                <View className="space-y-2">
+                  {schedulesByDate[selectedDate]
+                    .filter((s) => s.status === "AVAILABLE")
+                    .map((schedule) => (
+                      <TouchableOpacity
+                        key={schedule.id}
+                        onPress={() => handleScheduleSelect(schedule)}
+                        className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex-row justify-between items-center"
+                        activeOpacity={0.7}
+                      >
+                        <View className="flex-1">
+                          <Text className="font-medium text-gray-800">
+                            {schedule.title}
+                          </Text>
+                          <Text className="text-gray-600 text-sm mt-1">
+                            {schedule.startTime} - {schedule.endTime}
+                          </Text>
+                          {schedule.description && (
+                            <Text className="text-gray-500 text-sm mt-1">
+                              {schedule.description}
+                            </Text>
+                          )}
+                        </View>
+                        <View className="bg-pink-500 px-4 py-2 rounded-xl">
+                          <Text className="text-white text-sm font-medium">
+                            Select
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                </View>
+              )}
+
+              {!selectedDate && (
+                <View className="bg-gray-50 p-4 rounded-xl">
+                  <Text className="text-gray-600 text-center">
+                    Select a date to view available time slots
                   </Text>
                 </View>
-              </View>
-
-              {/* Month */}
-              <View className="items-center">
-                <Text className="text-sm text-gray-600 mb-2">Month</Text>
-                <View className="w-16 h-16 bg-pink-500 rounded-2xl items-center justify-center">
-                  <Text className="text-xl font-bold text-white">{month}</Text>
-                </View>
-              </View>
-
-              {/* Time */}
-              <View className="items-center">
-                <Text className="text-sm text-gray-600 mb-2">Time</Text>
-                <View className="bg-gray-100 px-4 py-3 rounded-2xl">
-                  <Text className="text-lg font-semibold text-gray-800">
-                    {time}
-                  </Text>
-                </View>
-              </View>
+              )}
             </View>
-          </View>
+          ) : selectedSchedule ? (
+            <View className="mt-6">
+              <Text className="text-lg font-semibold text-gray-800 mb-4">
+                Selected Appointment
+              </Text>
+
+              <View className="flex-row items-center space-x-4">
+                {/* Day */}
+                <View className="items-center">
+                  <Text className="text-sm text-gray-600 mb-2">Day</Text>
+                  <View className="w-16 h-16 bg-gray-100 rounded-2xl items-center justify-center">
+                    <Text className="text-2xl font-bold text-gray-800">
+                      {day}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Month */}
+                <View className="items-center">
+                  <Text className="text-sm text-gray-600 mb-2">Month</Text>
+                  <View className="w-16 h-16 bg-pink-500 rounded-2xl items-center justify-center">
+                    <Text className="text-xl font-bold text-white">
+                      {month}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Time */}
+                <View className="items-center">
+                  <Text className="text-sm text-gray-600 mb-2">Time</Text>
+                  <View className="bg-gray-100 px-4 py-3 rounded-2xl">
+                    <Text className="text-lg font-semibold text-gray-800">
+                      {time}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Change Slot Button */}
+              <TouchableOpacity
+                onPress={() => setSelectedSchedule(null)}
+                className="mt-4 bg-gray-100 py-3 rounded-xl"
+              >
+                <Text className="text-gray-700 text-center font-medium">
+                  Change Time Slot
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
 
           {/* Reason to Visit */}
           <View className="mt-8">
@@ -248,13 +377,17 @@ export default function BookingConfirmation({
         <View className="p-6 border-t border-gray-100">
           <TouchableOpacity
             onPress={handleBookNow}
-            disabled={isLoading}
+            disabled={isLoading || !selectedSchedule}
             className={`py-4 rounded-2xl ${
-              isLoading ? "bg-pink-400" : "bg-pink-500"
+              isLoading || !selectedSchedule ? "bg-pink-400" : "bg-pink-500"
             }`}
           >
             <Text className="text-white text-center text-lg font-semibold">
-              {isLoading ? "Booking..." : "Book Now"}
+              {isLoading
+                ? "Booking..."
+                : selectedSchedule
+                ? "Book Now"
+                : "Select a time slot first"}
             </Text>
           </TouchableOpacity>
         </View>

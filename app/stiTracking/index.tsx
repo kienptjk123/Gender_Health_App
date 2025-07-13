@@ -1,7 +1,9 @@
 import { stiApi } from "@/apis/sti.api";
+import { SafeAreaView } from "@/components/SafeArea";
 import StisTrackingSection from "@/components/STI/StisTrackingSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { Data } from "@/models/STI/sti.type";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -61,18 +63,19 @@ export default function STITrackingScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-white px-6 py-4 shadow-sm">
-        <View className="flex-row items-center">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="mr-4 p-2 -ml-2"
-          >
-            <Text className="text-xl">←</Text>
-          </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-800">STI Tracking</Text>
-        </View>
+      <View className="flex-row items-center justify-between px-4 py-3 bg-white shadow-sm">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
+        >
+          <Ionicons name="chevron-back" size={24} color="#374151" />
+        </TouchableOpacity>
+        <Text className="text-lg font-semibold text-gray-800">
+          STI Tracking
+        </Text>
+        <View className="w-10" />
       </View>
 
       {/* Content */}
@@ -153,6 +156,6 @@ export default function STITrackingScreen() {
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

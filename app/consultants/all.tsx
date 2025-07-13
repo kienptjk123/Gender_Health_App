@@ -129,7 +129,7 @@ export default function AllConsultantsScreen() {
             onPress={() => router.back()}
             className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
           >
-            <Ionicons name="arrow-back" size={20} color="white" />
+            <Ionicons name="chevron-back" size={24} color="#ffffff" />
           </TouchableOpacity>
 
           <Text className="text-white text-xl font-bold">All Consultants</Text>
@@ -137,9 +137,8 @@ export default function AllConsultantsScreen() {
           <View className="w-10 h-10" />
         </View>
       </LinearGradient>
-
       {/* Search Bar */}
-      <View className="px-4 -mt-6 mb-4">
+      <View className="px-4 mt-6 mb-4">
         <View className="bg-white rounded-2xl shadow-lg flex-row items-center px-4 py-3">
           <Ionicons name="search" size={20} color="#6b7280" />
           <TextInput
