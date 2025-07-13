@@ -11,7 +11,7 @@ export interface Appointment {
   id: number;
   consultantProfileId: number;
   customerProfileId: number;
-  scheduledAt: string;
+  scheduleAt: string;
   startedAt: string | null;
   endedAt: string | null;
   status: string;

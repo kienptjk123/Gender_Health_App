@@ -10,8 +10,8 @@ export default function WelcomeScreen() {
   const slides = [
     {
       id: 0,
-      title: "Hello Care",
-      subtitle: "Professional Healthcare Services",
+      title: "Gender Health Care App",
+      subtitle: "Professional Gender Health Services",
       description: "Your trusted partner in health and wellness journey.",
       gradient: ["#fda4af", "#f9a8d4"] as const,
     },
@@ -36,79 +36,22 @@ export default function WelcomeScreen() {
   const currentSlideData = slides[currentSlide];
 
   return (
-    <SafeArea
-      statusBarStyle="light-content"
-      edges={["top", "bottom", "left", "right"]}
-    >
-      <LinearGradient colors={currentSlideData.gradient} className="flex-1">
-        <View className="flex-1">
-          {/* Main content */}
-          <View className="flex-1">
-            {currentSlide === 0 ? (
-              // First slide - Doctor with pink theme
-              <View className="flex-1  px-6 pt-16">
-                <View className="flex-1 items-center justify-center">
-                  <View className="w-80 h-[300px] rounded-3xl items-center justify-center mb-8 shadow-2xl">
-                    {/* Doctor image */}
-                    <View className="w-full h-full bg-white rounded-2xl items-center justify-center shadow-lg overflow-hidden">
-                      <Image
-                        source={require("@/assets/images/1.png")}
-                        className="w-full h-full"
-                        resizeMode="cover"
-                      />
-                    </View>
-                  </View>
-                </View>
-
-                <View className="pb-8">
-                  <Text className="text-4xl font-bold text-white text-center mb-4">
-                    {currentSlideData.title}
-                  </Text>
-                  <Text className="text-lg text-white text-center mb-2 px-4 font-medium">
-                    {currentSlideData.subtitle}
-                  </Text>
-                  <Text className="text-base text-white text-center mb-8 px-4 opacity-90">
-                    {currentSlideData.description}
-                  </Text>
-
-                  {/* Dots indicator */}
-                  <View className="flex-row justify-center items-center mb-8">
-                    <View className="w-8 h-2 bg-white rounded-full mx-1"></View>
-                    <View className="w-2 h-2 bg-white/50 rounded-full mx-1"></View>
-                  </View>
-
-                  <TouchableOpacity
-                    className="bg-white rounded-2xl py-4 mx-6 shadow-lg"
-                    onPress={handleGetStarted}
-                  >
-                    <Text className="text-pink-500 text-center text-lg font-semibold">
-                      Get Started
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
+    <>
+      {currentSlide === 0 ? (
+        <SafeArea
+          statusBarStyle="light-content"
+          backgroundColor="#fda4af"
+          edges={["top", "bottom", "left", "right"]}
+        >
+          <LinearGradient colors={currentSlideData.gradient} className="flex-1">
+            <View className="flex-1">
               <View className="flex-1">
-                <View className="flex-1 relative">
-                  {/* Title */}
-                  <View className="px-6 pt-16 mb-4">
-                    <Text className="text-4xl font-bold text-black mb-2">
-                      Meet
-                    </Text>
-                    <Text className="text-4xl font-bold text-black mb-4">
-                      our moms!
-                    </Text>
-                    <Text className="text-lg text-gray-700 text-center mb-4 font-medium">
-                      Join Our Community
-                    </Text>
-                  </View>
-
-                  <View className="flex-1 items-center justify-center relative">
-                    {/* Main mom and baby */}
-                    <View className="w-full h-[400px] items-center justify-center relative">
-                      <View className="w-full h-full overflow-hidden">
+                <View className="flex-1  px-6 pt-16">
+                  <View className="flex-1 items-center justify-center">
+                    <View className="w-80 h-[300px] rounded-3xl items-center justify-center mb-8 shadow-2xl">
+                      <View className="w-full h-full bg-white rounded-2xl items-center justify-center shadow-lg overflow-hidden">
                         <Image
-                          source={require("@/assets/images/7.png")}
+                          source={require("@/assets/images/1.png")}
                           className="w-full h-full"
                           resizeMode="cover"
                         />
@@ -116,46 +59,112 @@ export default function WelcomeScreen() {
                     </View>
                   </View>
 
-                  {/* Description and button */}
-                  <View className="pb-8 px-6">
-                    <Text className="text-xl text-black text-center mb-4 leading-6 font-semibold">
-                      Connect with millions of mothers
+                  <View className="pb-8">
+                    <Text className="text-3xl font-bold text-white text-center mb-4">
+                      {currentSlideData.title}
                     </Text>
-                    <Text className="text-base text-gray-700 text-center mb-8 leading-6">
+                    <Text className="text-lg text-white text-center mb-2 px-4 font-medium">
+                      {currentSlideData.subtitle}
+                    </Text>
+                    <Text className="text-base text-white text-center mb-8 px-4 opacity-90">
                       {currentSlideData.description}
                     </Text>
 
-                    {/* Features */}
-                    <View className="mb-6">
-                      <View className="flex-row items-center justify-center">
-                        <Text className="text-pink-500 text-lg mr-2">🌸</Text>
-                        <Text className="text-gray-700 text-center">
-                          Expert advice and support
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Dots indicator */}
                     <View className="flex-row justify-center items-center mb-8">
-                      <View className="w-2 h-2 bg-gray-400 rounded-full mx-1"></View>
-                      <View className="w-8 h-2 bg-pink-400 rounded-full mx-1"></View>
+                      <View className="w-8 h-2 bg-white rounded-full mx-1"></View>
+                      <View className="w-2 h-2 bg-white/50 rounded-full mx-1"></View>
                     </View>
 
                     <TouchableOpacity
-                      className="bg-[#fda4af] rounded-2xl py-4 mx-2 shadow-lg"
+                      className="bg-white rounded-2xl py-4 mx-6 shadow-lg"
                       onPress={handleGetStarted}
                     >
-                      <Text className="text-white text-center text-lg font-semibold">
-                        Join Our Community
+                      <Text className="text-pink-500 text-center text-lg font-semibold">
+                        Get Started
                       </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
-            )}
-          </View>
-        </View>
-      </LinearGradient>
-    </SafeArea>
+            </View>
+          </LinearGradient>
+        </SafeArea>
+      ) : (
+        <SafeArea
+          statusBarStyle="light-content"
+          backgroundColor="#FFCBD7"
+          edges={["top", "bottom", "left", "right"]}
+        >
+          <LinearGradient colors={currentSlideData.gradient} className="flex-1">
+            <View className="flex-1">
+              <View className="flex-1">
+                <View className="flex-1">
+                  <View className="flex-1 relative">
+                    <View className="flex-1 items-center justify-center relative">
+                      <View className="w-full h-[350px] items-center justify-center relative">
+                        <View className="w-full h-full overflow-hidden">
+                          <Image
+                            source={require("@/assets/images/7.png")}
+                            className="w-full h-full"
+                            resizeMode="cover"
+                          />
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Description and button */}
+                    <View className="pb-8 px-6">
+                      <Text className="text-xl text-gray-800 text-center mb-4 leading-6 font-bold">
+                        Connect with millions of mothers
+                      </Text>
+                      <Text className="text-base text-gray-700 text-center mb-6 leading-6">
+                        {currentSlideData.description}
+                      </Text>
+
+                      {/* Features */}
+                      <View className="mb-6 space-y-3">
+                        <View className="flex-row items-center justify-center mb-2">
+                          <Text className="text-yellow-500 text-lg mr-2">
+                            🌟
+                          </Text>
+                          <Text className="text-gray-800 text-center font-semibold">
+                            Expert advice and support
+                          </Text>
+                        </View>
+                        <View className="flex-row items-center justify-center mb-2">
+                          <Text className="text-pink-500 text-lg mr-2">💝</Text>
+                          <Text className="text-gray-800 text-center font-semibold">
+                            Safe and caring community
+                          </Text>
+                        </View>
+                        <View className="flex-row items-center justify-center">
+                          <Text className="text-blue-500 text-lg mr-2">📱</Text>
+                          <Text className="text-gray-800 text-center font-semibold">
+                            24/7 support and resources
+                          </Text>
+                        </View>
+                      </View>
+                      <View className="flex-row justify-center items-center mb-8">
+                        <View className="w-2 h-2 bg-white rounded-full mx-1"></View>
+                        <View className="w-8 h-2 bg-white/50 rounded-full mx-1"></View>
+                      </View>
+
+                      <TouchableOpacity
+                        className="bg-white rounded-2xl py-4 mx-2 shadow-lg border border-gray-200"
+                        onPress={handleGetStarted}
+                      >
+                        <Text className="text-pink-500 text-center text-lg font-bold">
+                          Join Our Community
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </LinearGradient>
+        </SafeArea>
+      )}
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import { authService } from "@/apis";
+import ConsultantList from "@/components/ConsultantList";
 import UpcomingAppointmentSection from "@/components/UpcomingAppointmentSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
@@ -111,34 +112,15 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* Quick Actions */}
-      <View className="mt-8 mb-6">
-        <Text className="text-xl font-semibold text-gray-800 mb-4">
-          Quick Actions
-        </Text>
-        <View className="flex-row flex-wrap gap-3">
-          <TouchableOpacity className="bg-pink-500 rounded-xl p-4 flex-1 min-w-[45%]">
-            <Text className="text-white font-semibold text-center">
-              Log Period
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="bg-purple-500 rounded-xl p-4 flex-1 min-w-[45%]">
-            <Text className="text-white font-semibold text-center">
-              Symptoms
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="bg-green-500 rounded-xl p-4 flex-1 min-w-[45%]">
-            <Text className="text-white font-semibold text-center">
-              Medications
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="bg-pink-500 rounded-xl p-4 flex-1 min-w-[45%]">
-            <Text className="text-white font-semibold text-center">
-              Exercise
-            </Text>
-          </TouchableOpacity>
-        </View>
+      <View className="p-4">
+        {customerProfile?.id ? (
+          <>
+            <ConsultantList customerProfileId={customerProfile.id} />
+            <UpcomingAppointmentSection customerId={customerProfile.id} />
+          </>
+        ) : (
+          <Text className="text-center text-gray-500 mt-4">Loading...</Text>
+        )}
       </View>
     </ScrollView>
   );

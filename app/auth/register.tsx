@@ -168,14 +168,11 @@ export default function Register() {
 
   return (
     <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
-      <LinearGradient
-        colors={["#FFCBD7", "#F8BBD9"]}
-        className="flex-1"
-      >
+      <LinearGradient colors={["#FFCBD7", "#F8BBD9"]} className="flex-1">
         {/* Background Image */}
         <View className="absolute inset-0">
           <Image
-            source={require("@/assets/images/1.png")}
+            source={require("@/assets/images/7.png")}
             className="w-full h-full opacity-20"
             resizeMode="cover"
           />
@@ -187,23 +184,19 @@ export default function Register() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <View className="pt-16 pb-6 px-6">
-            <Text className="text-4xl font-bold text-white text-center mb-2">
-              Join Our Community
-            </Text>
-            <Text className="text-lg text-white/90 text-center">
-              Create your account to get started
-            </Text>
-          </View>
-
-          {/* Form Card */}
-          <View className="flex-1 px-6 pb-8">
-            <View className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 shadow-2xl">
-              {/* Form Fields */}
+          <View className="flex-1 px-6">
+            <View className="bg-white/95 backdrop-blur-sm rounded-3xl px-6 shadow-2xl">
+              <View className="pb-2 pt-5">
+                <Text className="text-2xl font-bold text-black text-center">
+                  Join Our Community
+                </Text>
+                <Text className="text-lg text-black text-center">
+                  Create your account to get started
+                </Text>
+              </View>
               <View className="space-y-4">
                 {/* Name Field */}
-                <View>
+                <View className="py-2">
                   <Text className="text-sm font-semibold text-gray-700 mb-2">
                     Full Name *
                   </Text>
@@ -224,7 +217,11 @@ export default function Register() {
                       <>
                         <View className="relative">
                           <View className="absolute left-3 top-3 z-10">
-                            <Ionicons name="person-outline" size={18} color="#F8BBD9" />
+                            <Ionicons
+                              name="person-outline"
+                              size={18}
+                              color="#F8BBD9"
+                            />
                           </View>
                           <TextInput
                             className={`border-2 rounded-xl pl-10 pr-4 py-3 text-sm bg-gray-50 ${
@@ -249,7 +246,7 @@ export default function Register() {
                 </View>
 
                 {/* Email Field */}
-                <View>
+                <View className="pb-2">
                   <Text className="text-sm font-semibold text-gray-700 mb-2">
                     Email Address *
                   </Text>
@@ -270,7 +267,11 @@ export default function Register() {
                       <>
                         <View className="relative">
                           <View className="absolute left-3 top-3 z-10">
-                            <Ionicons name="mail-outline" size={18} color="#F8BBD9" />
+                            <Ionicons
+                              name="mail-outline"
+                              size={18}
+                              color="#F8BBD9"
+                            />
                           </View>
                           <TextInput
                             className={`border-2 rounded-xl pl-10 pr-4 py-3 text-sm bg-gray-50 ${
@@ -296,7 +297,7 @@ export default function Register() {
                 </View>
 
                 {/* Date of Birth */}
-                <View>
+                <View className="pb-2">
                   <Text className="text-sm font-semibold text-gray-700 mb-2">
                     Date of Birth *
                   </Text>
@@ -305,7 +306,11 @@ export default function Register() {
                     className="border-2 border-pink-200 rounded-xl px-3 py-3 flex-row items-center justify-between bg-gray-50"
                   >
                     <View className="flex-row items-center">
-                      <Ionicons name="calendar-outline" size={18} color="#F8BBD9" />
+                      <Ionicons
+                        name="calendar-outline"
+                        size={18}
+                        color="#F8BBD9"
+                      />
                       <Text
                         className={`text-sm ml-2 ${
                           watchedDateOfBirth ? "text-gray-900" : "text-gray-500"
@@ -316,7 +321,11 @@ export default function Register() {
                           : "Select date of birth"}
                       </Text>
                     </View>
-                    <Ionicons name="chevron-down-outline" size={16} color="#F8BBD9" />
+                    <Ionicons
+                      name="chevron-down-outline"
+                      size={16}
+                      color="#F8BBD9"
+                    />
                   </TouchableOpacity>
                   {showDatePicker && (
                     <DateTimePicker
@@ -335,7 +344,7 @@ export default function Register() {
                 </View>
 
                 {/* Password Field */}
-                <View>
+                <View className="pb-2">
                   <Text className="text-sm font-semibold text-gray-700 mb-2">
                     Password *
                   </Text>
@@ -356,7 +365,11 @@ export default function Register() {
                       <>
                         <View className="relative">
                           <View className="absolute left-3 top-3 z-10">
-                            <Ionicons name="lock-closed-outline" size={18} color="#F8BBD9" />
+                            <Ionicons
+                              name="lock-closed-outline"
+                              size={18}
+                              color="#F8BBD9"
+                            />
                           </View>
                           <TextInput
                             className={`border-2 rounded-xl pl-10 pr-12 py-3 text-sm bg-gray-50 ${
@@ -392,7 +405,6 @@ export default function Register() {
                   />
                 </View>
 
-                {/* Confirm Password Field */}
                 <View>
                   <Text className="text-sm font-semibold text-gray-700 mb-2">
                     Confirm Password *
@@ -412,7 +424,11 @@ export default function Register() {
                       <>
                         <View className="relative">
                           <View className="absolute left-3 top-3 z-10">
-                            <Ionicons name="shield-checkmark-outline" size={18} color="#F8BBD9" />
+                            <Ionicons
+                              name="shield-checkmark-outline"
+                              size={18}
+                              color="#F8BBD9"
+                            />
                           </View>
                           <TextInput
                             className={`border-2 rounded-xl pl-10 pr-12 py-3 text-sm bg-gray-50 ${
@@ -467,7 +483,7 @@ export default function Register() {
                       <>
                         <TouchableOpacity
                           onPress={() => onChange(!value)}
-                          className="flex-row items-start space-x-3 bg-pink-50 p-3 rounded-xl"
+                          className="flex-row items-start gap-2 space-x-3 bg-pink-50 p-3 rounded-xl"
                         >
                           <View
                             className={`w-5 h-5 border-2 rounded mt-0.5 ${
@@ -477,7 +493,11 @@ export default function Register() {
                             } items-center justify-center`}
                           >
                             {value && (
-                              <Ionicons name="checkmark" size={12} color="white" />
+                              <Ionicons
+                                name="checkmark"
+                                size={12}
+                                color="white"
+                              />
                             )}
                           </View>
                           <Text className="text-xs text-gray-700 flex-1 leading-4">
@@ -502,63 +522,38 @@ export default function Register() {
                 </View>
               </View>
 
-              {/* Submit Button */}
-              <LinearGradient
-                colors={loading ? ["#F8BBD9", "#FFCBD7"] : ["#F8BBD9", "#F06292"]}
-                className="mt-6 rounded-xl"
+              <TouchableOpacity
+                className="py-3 px-6 bg-[#f9a8d4] rounded-2xl mt-4"
+                onPress={handleSubmit(onSubmit)}
+                disabled={loading}
               >
-                <TouchableOpacity
-                  className="py-3 px-6"
-                  onPress={handleSubmit(onSubmit)}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <View className="flex-row items-center justify-center">
-                      <ActivityIndicator size="small" color="white" />
-                      <Text className="text-white font-bold text-base ml-2">
-                        Creating Account...
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text className="text-white font-bold text-base text-center">
-                      Create Account
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </LinearGradient>
-
-              {/* Social Options */}
-              <View className="mt-4">
-                <View className="flex-row items-center mb-4">
-                  <View className="flex-1 h-px bg-gray-300"></View>
-                  <Text className="mx-3 text-gray-500 text-xs font-medium">OR</Text>
-                  <View className="flex-1 h-px bg-gray-300"></View>
-                </View>
-
-                <TouchableOpacity className="bg-gray-100 rounded-xl py-3 px-4 border border-gray-200">
+                {loading ? (
                   <View className="flex-row items-center justify-center">
-                    <Text className="text-base mr-2">🌸</Text>
-                    <Text className="text-gray-700 font-semibold text-sm">
-                      Continue with Google
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white font-bold text-base ml-2">
+                      Creating Account...
                     </Text>
                   </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
+                ) : (
+                  <Text className="text-white font-bold text-base text-center">
+                    Create Account
+                  </Text>
+                )}
+              </TouchableOpacity>
 
-          {/* Footer */}
-          <View className="pb-8 px-6">
-            <View className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
-              <Text className="text-white text-center text-sm">
-                Already have an account?{" "}
-                <Text
-                  className="text-white font-bold underline"
-                  onPress={() => router.push("/auth/login")}
-                >
-                  Sign In Here
-                </Text>
-              </Text>
+              <View className="px-6 pb-4">
+                <View className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
+                  <Text className="text-black text-center text-sm">
+                    Already have an account?{" "}
+                    <Text
+                      className="text-pink-500 font-bold underline"
+                      onPress={() => router.push("/auth/login")}
+                    >
+                      Sign In Here
+                    </Text>
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         </ScrollView>

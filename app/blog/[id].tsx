@@ -157,7 +157,7 @@ export default function BlogDetail() {
 
   // Main blog content
   return (
-    <SafeArea>
+    <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
       <StatusBar
         barStyle="light-content"
         backgroundColor="transparent"
@@ -169,7 +169,6 @@ export default function BlogDetail() {
           showsVerticalScrollIndicator={false}
           bounces={true}
         >
-          {/* Hero Image with Overlay */}
           <View className="relative h-80">
             {blog.image && (
               <Image
@@ -181,8 +180,8 @@ export default function BlogDetail() {
             <LinearGradient
               colors={[
                 "transparent",
-                "rgba(236,72,153,0.3)",
-                "rgba(236,72,153,0.7)",
+                "rgba(110, 109, 109, 0.3)",
+                "rgba(121, 117, 119, 0.7)",
               ]}
               className="absolute inset-0"
             />
@@ -202,7 +201,7 @@ export default function BlogDetail() {
           </View>
 
           {/* Content Container */}
-          <View className="bg-white rounded-t-3xl -mt-6 pt-8 px-5 pb-8">
+          <View className="bg-white rounded-t-3xl -mt-6 pt-8 px-5">
             {/* Tags */}
             {blog.tags && blog.tags.length > 0 && (
               <View className="flex-row flex-wrap mb-4">
@@ -255,7 +254,6 @@ export default function BlogDetail() {
               </View>
             </View>
 
-            {/* Content */}
             <View className="mb-8">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="book-outline" size={18} color="#EC4899" />
@@ -264,102 +262,9 @@ export default function BlogDetail() {
                 </Text>
               </View>
 
-              <Text className="text-gray-700 text-base leading-7 mb-4">
+              <Text className="text-gray-700 text-base leading-7">
                 {getContentText(blog.content) || "Không có nội dung"}
               </Text>
-
-              <TouchableOpacity className="flex-row items-center bg-pink-100 px-3 py-2 rounded-full">
-                <Text className="text-pink-600 font-semibold mr-2">
-                  Tiếp tục đọc
-                </Text>
-                <Ionicons name="arrow-forward" size={16} color="#EC4899" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Author Bio */}
-            {blog.staff && (
-              <View className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-5 mb-8 border-2 border-pink-200 shadow-sm">
-                <View className="flex-row items-center mb-4">
-                  <Ionicons name="person-circle" size={24} color="#EC4899" />
-                  <Text className="text-xl font-bold text-pink-600 ml-2">
-                    Về tác giả
-                  </Text>
-                </View>
-                <View className="flex-row items-start">
-                  {blog.staff.avatar && (
-                    <Image
-                      source={{ uri: blog.staff.avatar }}
-                      className="w-16 h-16 rounded-full mr-4 border-3 border-pink-300"
-                    />
-                  )}
-                  <View className="flex-1">
-                    <Text className="text-lg font-semibold text-gray-900 mb-1">
-                      {blog.staff.name}
-                    </Text>
-                    <View className="bg-pink-100 px-3 py-1 rounded-full self-start mb-2">
-                      <Text className="text-pink-700 text-sm font-semibold">
-                        Chuyên gia sức khỏe giới tính
-                      </Text>
-                    </View>
-                    <Text className="text-gray-700 text-sm leading-5">
-                      Chuyên gia giàu kinh nghiệm trong lĩnh vực sức khỏe giới
-                      tính, tư vấn và hỗ trợ cộng đồng hiểu rõ hơn về sức khỏe
-                      sinh sản.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {/* Related Articles */}
-            <View className="mt-4">
-              <View className="flex-row items-center mb-4">
-                <Ionicons name="library" size={24} color="#EC4899" />
-                <Text className="text-2xl font-bold text-pink-600 ml-2">
-                  Bài viết liên quan
-                </Text>
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {[1, 2, 3].map((item) => (
-                  <TouchableOpacity
-                    key={item}
-                    className="w-72 bg-white rounded-2xl mr-4 shadow-lg border border-pink-100"
-                  >
-                    <LinearGradient
-                      colors={["#EC4899", "#F472B6"]}
-                      className="h-36 rounded-t-2xl justify-end p-4"
-                    >
-                      <View className="self-start">
-                        <Text className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
-                          SỨC KHỎE
-                        </Text>
-                      </View>
-                    </LinearGradient>
-                    <View className="p-4">
-                      <Text className="font-semibold text-gray-900 mb-2">
-                        Bài viết liên quan {item}
-                      </Text>
-                      <Text className="text-gray-600 text-sm mb-3 leading-5">
-                        Mô tả ngắn gọn về nội dung bài viết và những thông tin
-                        hữu ích.
-                      </Text>
-                      <View className="flex-row justify-between items-center">
-                        <View className="flex-row items-center bg-pink-50 px-2 py-1 rounded-full">
-                          <Ionicons name="time" size={12} color="#EC4899" />
-                          <Text className="text-pink-600 text-xs ml-1 font-medium">
-                            5 phút đọc
-                          </Text>
-                        </View>
-                        <Ionicons
-                          name="arrow-forward"
-                          size={16}
-                          color="#EC4899"
-                        />
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
             </View>
           </View>
         </ScrollView>

@@ -1,9 +1,73 @@
+import EditProfileModal from "@/components/EditProfileModal";
 import { useAuth } from "@/contexts/AuthContext";
-import { ScrollView, Text, TouchableOpacity, View, Alert } from "react-native";
+import { UserProfile } from "@/models/profile";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Toast from "react-native-toast-message";
 
 export default function ProfileTab() {
   const { user, logout } = useAuth();
+  const [showEditModal, setShowEditModal] = useState(false);
+  const router = useRouter();
+
+  // Convert user to UserProfile format for the modal
+  const userProfile: UserProfile = {
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone_number || "",
+    bio: user?.bio || "",
+    location: user?.location || "",
+    website: user?.website || "",
+    avatar: user?.avatar || "",
+  };
+
+  const colors = {
+    primary: "#ec4899", // pink-500
+    primaryLight: "#fce7f3", // pink-100
+    secondary: "#f3f4f6", // gray-100
+    text: "#111827", // gray-900
+    textLight: "#6b7280", // gray-500
+    white: "#ffffff",
+  };
+
+  const handleEditProfile = () => {
+    setShowEditModal(true);
+  };
+
+  const handleSaveProfile = async (
+    updatedProfile: UserProfile,
+    changedFields: Partial<UserProfile>
+  ) => {
+    try {
+      // Here you would typically call an API to update the user profile
+      // For now, we'll just show a success message
+      console.log("Updated profile:", updatedProfile);
+      console.log("Changed fields:", changedFields);
+
+      Toast.show({
+        type: "success",
+        text1: "Profile Updated",
+        text2: "Your profile has been updated successfully",
+      });
+
+      setShowEditModal(false);
+    } catch (error: any) {
+      console.error("Profile update error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Update Failed",
+        text2: "Please try again later",
+      });
+    }
+  };
 
   const handleLogout = async () => {
     Alert.alert("Confirm Logout", "Are you sure you want to logout?", [
@@ -35,32 +99,29 @@ export default function ProfileTab() {
     ]);
   };
 
-  // Alternative simple logout (uncomment if you prefer no confirmation)
-  // const handleLogout = async () => {
-  //   try {
-  //     await logout();
-  //     Toast.show({
-  //       type: "success",
-  //       text1: "Logged Out",
-  //       text2: "You have been successfully logged out",
-  //     });
-  //   } catch (error: any) {
-  //     console.error("Logout error:", error);
-  //     Toast.show({
-  //       type: "error",
-  //       text1: "Logout Failed",
-  //       text2: "Please try again",
-  //     });
-  //   }
-  // };
-
   const profileSections = [
     {
       title: "Personal Information",
       items: [
-        { label: "Edit Profile", icon: "✏️", action: () => {} },
-        { label: "Health Profile", icon: "🏥", action: () => {} },
+        { label: "Edit Profile", icon: "✏️", action: handleEditProfile },
         { label: "Cycle Settings", icon: "🔄", action: () => {} },
+      ],
+    },
+    {
+      title: "Health & Consultations",
+      items: [
+        {
+          label: "Appointment History",
+          icon: "📋",
+          action: () => router.push("/appoinmentHistory" as any),
+        },
+        {
+          label: "STI Tracking",
+          icon: "🧪",
+          action: () => router.push("/stiTracking" as any),
+        },
+        { label: "Health Records", icon: "🏥", action: () => {} },
+        { label: "Symptoms Tracker", icon: "�", action: () => {} },
       ],
     },
     {
@@ -89,13 +150,23 @@ export default function ProfileTab() {
       <View className="bg-white px-6 py-8">
         <View className="items-center">
           <View className="w-24 h-24 bg-pink-100 rounded-full items-center justify-center mb-4">
-            <Text className="text-4xl">{user?.avatar || "👤"}</Text>
+            {user?.avatar ? (
+              <Image
+                source={{ uri: user.avatar }}
+                style={{ width: 96, height: 96, borderRadius: 48 }}
+              />
+            ) : (
+              <Text className="text-4xl">👤</Text>
+            )}
           </View>
           <Text className="text-2xl font-bold text-gray-800 mb-1">
             {user?.name || "User Name"}
           </Text>
           <Text className="text-gray-600 mb-4">{user?.email}</Text>
-          <TouchableOpacity className="bg-pink-500 px-6 py-2 rounded-full">
+          <TouchableOpacity
+            className="bg-pink-500 px-6 py-2 rounded-full"
+            onPress={handleEditProfile}
+          >
             <Text className="text-white font-medium">Edit Profile</Text>
           </TouchableOpacity>
         </View>
@@ -164,6 +235,16 @@ export default function ProfileTab() {
           <Text className="text-gray-400 text-xs">Version 1.0.0</Text>
         </View>
       </View>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        visible={showEditModal}
+        userProfile={userProfile}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleSaveProfile}
+        colors={colors}
+      />
+
       <Toast />
     </ScrollView>
   );
