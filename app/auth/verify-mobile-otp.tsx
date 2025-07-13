@@ -1,16 +1,19 @@
-import { useLocalSearchParams, router } from "expo-router";
-import { useState, useEffect } from "react";
+import { authService } from "@/apis/auth";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  Image,
+  ScrollView,
 } from "react-native";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
-import { authService } from "@/apis/auth";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface VerifyOTPFormData {
   otp: string;
@@ -25,13 +28,13 @@ export default function VerifyMobileOTP() {
   const [resendLoading, setResendLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
-  const { control, handleSubmit, setValue, watch } = useForm<VerifyOTPFormData>(
-    {
-      defaultValues: {
-        otp: "",
-      },
-    }
-  );
+  const otpRefs = useRef<(TextInput | null)[]>([]);
+
+  const { handleSubmit, setValue, watch } = useForm<VerifyOTPFormData>({
+    defaultValues: {
+      otp: "",
+    },
+  });
 
   const watchedOtp = watch("otp");
 
@@ -205,140 +208,161 @@ export default function VerifyMobileOTP() {
       .padStart(2, "0")}`;
   };
 
-  return (
-    <SafeArea>
-      <View className="flex-1 justify-center px-8 bg-white">
-        {/* Header */}
-        <View className="mb-8">
-          <Text className="text-3xl font-bold text-gray-900 text-center mb-2">
-            Verify Your Account
-          </Text>
-          <Text className="text-gray-600 text-center">
-            We&apos;ve sent a verification code to
-          </Text>
-          <Text className="text-pink-500 font-semibold text-center mt-1">
-            {email}
-          </Text>
-        </View>
+  const handleOTPChange = (text: string, index: number) => {
+    const cleanText = text.replace(/\D/g, "");
+    if (cleanText.length > 1) return;
 
-        {/* OTP Input */}
-        <View className="mb-6">
-          <Text className="text-sm font-medium text-gray-700 mb-2 text-center">
-            Enter 6-digit verification code
-          </Text>
-          <Controller
-            control={control}
-            name="otp"
-            rules={{
-              required: "OTP is required",
-              minLength: {
-                value: 6,
-                message: "OTP must be 6 digits",
-              },
-              maxLength: {
-                value: 6,
-                message: "OTP must be 6 digits",
-              },
-              pattern: {
-                value: /^\d{6}$/,
-                message: "OTP must be 6 digits",
-              },
-            }}
-            render={({
-              field: { onChange, onBlur, value },
-              fieldState: { error },
-            }) => (
-              <>
-                <TextInput
-                  className={`border-2 rounded-lg px-4 py-4 text-center text-2xl font-bold tracking-widest ${
-                    error ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="000000"
-                  placeholderTextColor="#9ca3af"
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  value={value}
-                  keyboardType="numeric"
-                  maxLength={6}
-                  autoFocus
-                />
-                {error && (
-                  <Text className="text-red-500 text-sm mt-1 text-center">
-                    {error.message}
-                  </Text>
-                )}
-              </>
-            )}
+    const currentOTP = watchedOtp.split("");
+    currentOTP[index] = cleanText;
+    const newOTP = currentOTP.join("");
+    setValue("otp", newOTP);
+
+    // Auto-focus next input
+    if (cleanText && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === "Backspace") {
+      const currentOTP = watchedOtp.split("");
+      if (currentOTP[index]) {
+        // Clear current field
+        currentOTP[index] = "";
+        setValue("otp", currentOTP.join(""));
+      } else if (index > 0) {
+        // Move to previous field and clear it
+        currentOTP[index - 1] = "";
+        setValue("otp", currentOTP.join(""));
+        otpRefs.current[index - 1]?.focus();
+      }
+    }
+  };
+
+  return (
+    <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
+      <LinearGradient colors={["#FFCBD7", "#F8BBD9"]} className="flex-1">
+        {/* Background Image */}
+        <View className="absolute inset-0">
+          <Image
+            source={require("@/assets/images/7.png")}
+            className="w-full h-full opacity-20"
+            resizeMode="cover"
           />
         </View>
 
-        {/* Verify Button */}
-        <TouchableOpacity
-          className={`mb-6 rounded-lg py-4 ${
-            loading || !watchedOtp || watchedOtp.length !== 6
-              ? "bg-pink-300"
-              : "bg-pink-500"
-          }`}
-          onPress={handleSubmit(onSubmit)}
-          disabled={loading || !watchedOtp || watchedOtp.length !== 6}
+        <ScrollView
+          className="flex-1 relative top-[180px]"
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {loading ? (
-            <View className="flex-row items-center justify-center">
-              <ActivityIndicator size="small" color="white" />
-              <Text className="text-white font-semibold text-lg ml-2">
-                Verifying...
-              </Text>
-            </View>
-          ) : (
-            <Text className="text-white font-semibold text-lg text-center">
-              Verify Code
-            </Text>
-          )}
-        </TouchableOpacity>
-
-        {/* Resend Section */}
-        <View className="items-center">
-          <Text className="text-gray-600 mb-2">
-            Didn&apos;t receive the code?
-          </Text>
-
-          {countdown > 0 ? (
-            <Text className="text-pink-500 font-semibold">
-              Resend in {formatTime(countdown)}
-            </Text>
-          ) : (
-            <TouchableOpacity
-              onPress={handleResendOTP}
-              disabled={resendLoading}
-              className="mb-2"
-            >
-              {resendLoading ? (
-                <View className="flex-row items-center">
-                  <ActivityIndicator size="small" color="#ec4899" />
-                  <Text className="text-pink-500 font-semibold ml-2">
-                    Sending...
-                  </Text>
+          <View className="flex-1 px-6 pb-8">
+            <View className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 shadow-2xl">
+              <View className="px-">
+                <Text className="text-2xl font-bold text-black text-center mb-1">
+                  Verify Your Account
+                </Text>
+                <Text className="text-lg text-black text-center">
+                  We&apos;ve sent a verification code to
+                </Text>
+                <Text className="text-black font-bold text-center mt-1">
+                  {email}
+                </Text>
+              </View>
+              <View className="mt-3">
+                <View className="flex-row justify-center mb-2">
+                  {[0, 1, 2, 3, 4, 5].map((index) => (
+                    <TextInput
+                      key={index}
+                      ref={(ref) => {
+                        if (!otpRefs.current) otpRefs.current = [];
+                        otpRefs.current[index] = ref;
+                      }}
+                      className={`w-14 h-14 border-2 rounded-xl text-center text-xl font-bold bg-gray-50 ${
+                        watchedOtp[index]
+                          ? "border-pink-300 bg-pink-50"
+                          : "border-gray-300"
+                      }`}
+                      maxLength={1}
+                      keyboardType="number-pad"
+                      value={watchedOtp[index] || ""}
+                      onChangeText={(text) => handleOTPChange(text, index)}
+                      onKeyPress={(e) => handleKeyPress(e, index)}
+                      autoFocus={index === 0}
+                      selectTextOnFocus
+                    />
+                  ))}
                 </View>
-              ) : (
-                <Text className="text-pink-500 font-semibold">Resend Code</Text>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
 
-        {/* Footer */}
-        <View className="mt-8 items-center">
-          <Text className="text-gray-600">
-            Wrong email address?{" "}
-            <Text
-              className="text-pink-500 font-semibold"
-              onPress={() => router.back()}
-            >
-              Go Back
-            </Text>
-          </Text>
-        </View>
-      </View>
+                {watchedOtp.length > 0 && watchedOtp.length < 6 && (
+                  <Text className="text-gray-500 text-sm text-center">
+                    {6 - watchedOtp.length} digits remaining
+                  </Text>
+                )}
+              </View>
+
+              <View className="items-start mb-3">
+                {countdown > 0 ? (
+                  <Text className="text-gray-500">
+                    Resend Code in {formatTime(countdown)}
+                  </Text>
+                ) : (
+                  <TouchableOpacity
+                    onPress={handleResendOTP}
+                    disabled={resendLoading}
+                  >
+                    {resendLoading ? (
+                      <View className="flex-row items-center">
+                        <ActivityIndicator size="small" color="#F8BBD9" />
+                        <Text className="text-pink-500 font-semibold underline ml-2">
+                          Sending...
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text className="text-pink-500 font-semibold underline">
+                        Resend Code
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <TouchableOpacity
+                className={`py-4 px-6 bg-[#f9a8d4] rounded-2xl ${
+                  loading || watchedOtp.length !== 6 ? "opacity-50" : ""
+                }`}
+                onPress={handleSubmit(onSubmit)}
+                disabled={loading || !watchedOtp || watchedOtp.length !== 6}
+              >
+                {loading ? (
+                  <Text className="text-white font-bold text-base text-center">
+                    Verifying...
+                  </Text>
+                ) : (
+                  <Text className="text-white font-bold text-base text-center">
+                    NEXT
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <View className="px-6">
+                <TouchableOpacity
+                  onPress={() => router.back()}
+                  className="bg-white/20 backdrop-blur-sm rounded-xl px-4 pt-4 pb-2 border border-white/20"
+                >
+                  <Text className="text-black text-center text-sm font-medium">
+                    Wrong email address?{" "}
+                    <Text className="font-bold underline text-pink-500">
+                      Go Back
+                    </Text>
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </LinearGradient>
       <Toast />
     </SafeArea>
   );

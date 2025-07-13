@@ -1,63 +1,44 @@
-import { apiService } from "../utils/fetcher";
 import { OrderFormRequest, OrderResponse } from "../models/testPackage";
+import type { AxiosError, AxiosResponse } from "axios";
+import { apiService } from "../utils/fetcher";
 
 export const orderApi = {
-  createOrder: async (orderData: OrderFormRequest): Promise<OrderResponse> => {
-    console.log("🔄 [ORDER API] Creating order...", orderData);
-
+  createOrder: async (data: OrderFormRequest): Promise<OrderResponse> => {
     try {
-      const response = await apiService.post<OrderResponse>(
-        "/order/create",
-        orderData
+      const response: AxiosResponse<OrderResponse> = await apiService.post(
+        `/order/create`,
+        data
       );
 
-      console.log("✅ [ORDER API] Order created successfully:", response.data);
       return response.data;
-    } catch (error: any) {
-      console.error("❌ [ORDER API] Failed to create order:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      throw error;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      throw axiosError;
     }
   },
 
-  getOrderDetail: async (orderId: number): Promise<OrderResponse> => {
-    console.log("🔄 [ORDER API] Getting order detail:", orderId);
-
+  getDetailOrder: async (id: number): Promise<OrderResponse> => {
     try {
-      const response = await apiService.get<OrderResponse>(`/order/${orderId}`);
+      const response: AxiosResponse<OrderResponse> = await apiService.get(
+        `/order/${id}`
+      );
 
-      console.log("✅ [ORDER API] Order detail retrieved:", response.data);
       return response.data;
-    } catch (error: any) {
-      console.error("❌ [ORDER API] Failed to get order detail:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      throw error;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      throw axiosError;
     }
   },
 
   getAllOrders: async (): Promise<{ data: OrderResponse[] }> => {
-    console.log("🔄 [ORDER API] Getting all orders...");
-
     try {
-      const response = await apiService.get<{ data: OrderResponse[] }>(
-        "/order"
-      );
+      const response: AxiosResponse<{ data: OrderResponse[] }> =
+        await apiService.get(`/order`);
 
-      console.log("✅ [ORDER API] Orders retrieved:", response.data);
       return response.data;
-    } catch (error: any) {
-      console.error("❌ [ORDER API] Failed to get orders:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      throw error;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      throw axiosError;
     }
   },
 };

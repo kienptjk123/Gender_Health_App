@@ -27,7 +27,7 @@ const TabIcon = ({
         friction: 10,
       }),
       Animated.spring(translateY, {
-        toValue: focused ? -2 : 0,
+        toValue: focused ? -1 : 0,
         useNativeDriver: true,
         tension: 300,
         friction: 10,
@@ -38,7 +38,7 @@ const TabIcon = ({
   const getIconComponent = () => {
     const iconProps = {
       name: iconName as any,
-      size: 20,
+      size: 18,
       color: focused ? "#ffffff" : "#6b7280",
     };
 
@@ -63,8 +63,8 @@ const TabIcon = ({
         className="items-center"
       >
         <View
-          className={`w-10 h-10 rounded-2xl items-center justify-center mb-1 ${
-            focused ? "bg-pink-500" : "bg-transparent"
+          className={`w-8 h-8 rounded-xl items-center justify-center ${
+            focused ? "bg-pink-400" : "bg-transparent"
           }`}
         >
           {getIconComponent()}
@@ -134,13 +134,21 @@ export default function BottomTabs() {
     <View
       style={{
         backgroundColor: "white",
-        borderTopWidth: 1,
-        borderTopColor: "#e5e7eb",
-        height: 80 + Math.max(insets.bottom, 10),
-        paddingBottom: Math.max(insets.bottom, 10),
-        paddingTop: 10,
+        borderTopWidth: 0.5,
+        borderTopColor: "#eeeaea",
+        height: 50 + Math.max(insets.bottom, 3),
+        paddingBottom: Math.max(insets.bottom, 3),
+        paddingTop: 3,
         paddingHorizontal: 16,
         flexDirection: "row",
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: -2,
+        },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 3,
       }}
     >
       {tabs.map((tab, index) => (

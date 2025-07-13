@@ -95,3 +95,13 @@ export interface PaymentResponse {
     payment_id: string;
   };
 }
+
+export interface PaymentListResponse {
+  message: string;
+  data: PaymentResponse[];
+}
+
+export interface OrderListResponse {
+  message: string;
+  data: OrderResponse[];
+}

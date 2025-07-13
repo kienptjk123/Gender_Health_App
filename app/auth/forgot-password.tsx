@@ -7,10 +7,14 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image,
+  ScrollView,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import Toast from "react-native-toast-message";
 import { SafeArea } from "@/components/SafeArea";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 
 interface ForgotPasswordFormData {
   email: string;
@@ -120,88 +124,110 @@ export default function ForgotPassword() {
   };
 
   return (
-    <SafeArea backgroundColor="#ffffff">
-      <View className="flex-1 px-6 py-4">
-        <View className="flex-row items-center mb-8 mt-4">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Text className="text-2xl">←</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View className="mb-12">
-          <Text className="text-3xl font-bold text-gray-800 mb-4">
-            Forgot Password? 🔑
-          </Text>
-          <Text className="text-gray-600 text-base leading-6">
-            Don&apos;t worry, we&apos;ve got you covered. Enter your registered
-            email address, and we&apos;ll send you an OTP code to reset your
-            password.
-          </Text>
-        </View>
-
-        <View className="mb-12">
-          <Text className="text-gray-800 font-medium mb-2">
-            Registered email address
-          </Text>
-          <Controller
-            control={control}
-            name="email"
-            rules={{
-              required: "Email is required",
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "Please enter a valid email address",
-              },
-            }}
-            render={({
-              field: { onChange, onBlur, value },
-              fieldState: { error },
-            }) => (
-              <>
-                <View
-                  className={`flex-row items-center bg-gray-50 rounded-2xl px-4 py-4 ${
-                    error ? "border border-red-500" : ""
-                  }`}
-                >
-                  <Text className="text-gray-400 mr-3">📧</Text>
-                  <TextInput
-                    className="flex-1 text-gray-800"
-                    placeholder="Enter your email"
-                    placeholderTextColor="#9CA3AF"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-                {error && (
-                  <Text className="text-red-500 text-sm mt-2 ml-2">
-                    {error.message}
-                  </Text>
-                )}
-              </>
-            )}
+    <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
+      <LinearGradient colors={["#FFCBD7", "#F8BBD9"]} className="flex-1">
+        {/* Background Image */}
+        <View className="absolute inset-0">
+          <Image
+            source={require("@/assets/images/7.png")}
+            className="w-full h-full opacity-20"
+            resizeMode="cover"
           />
         </View>
 
-        <TouchableOpacity
-          className={`rounded-full py-4 mb-4 ${
-            loading ? "bg-pink-300" : "bg-pink-500"
-          }`}
-          onPress={handleSubmit(onSubmit)}
-          disabled={loading}
+        <ScrollView
+          className="flex-1 relative top-[120px]"
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white text-center text-lg font-semibold">
-              Send OTP Code
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
+          <View className="pt-16 pb-2 px-6">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-10 h-10 rounded-full bg-white/20 items-center justify-center mb-6"
+            >
+              <Ionicons name="arrow-back" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          <View className="flex-1 px-6 pb-8">
+            <View className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 shadow-2xl">
+              <Text className="text-2xl font-bold text-black text-center mb-2">
+                Forgot Password
+              </Text>
+              <View className="mb-4">
+                <Text className="text-sm font-semibold text-gray-700 mb-2">
+                  Registered email address
+                </Text>
+                <Controller
+                  control={control}
+                  name="email"
+                  rules={{
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: "Please enter a valid email address",
+                    },
+                  }}
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <>
+                      <View className="relative">
+                        <View className="absolute left-3 top-3 z-10">
+                          <Ionicons
+                            name="mail-outline"
+                            size={18}
+                            color="#F8BBD9"
+                          />
+                        </View>
+                        <TextInput
+                          className={`border-2 rounded-xl pl-10 pr-4 py-3 text-sm bg-gray-50 ${
+                            error ? "border-red-300" : "border-pink-200"
+                          }`}
+                          placeholder="Enter your email"
+                          placeholderTextColor="#9CA3AF"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                        />
+                      </View>
+                      {error && (
+                        <Text className="text-red-500 text-sm mt-1 ml-2">
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </View>
+
+              <TouchableOpacity
+                className="py-4 px-6 bg-[#f9a8d4] rounded-2xl"
+                onPress={handleSubmit(onSubmit)}
+                disabled={loading}
+              >
+                {loading ? (
+                  <View className="flex-row items-center justify-center">
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white font-bold text-base ml-2">
+                      Sending...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="text-white font-bold text-base text-center">
+                    Send OTP Code
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </LinearGradient>
       <Toast />
     </SafeArea>
   );
