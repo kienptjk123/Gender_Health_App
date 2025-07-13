@@ -1,4 +1,4 @@
-import { Appointment } from "@/models/appointment.type";
+import { Appointment } from "@/models/appointment";
 import { apiService } from "@/utils/fetcher";
 
 export const appointmentApi = {

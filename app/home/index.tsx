@@ -1,19 +1,22 @@
 import { authService } from "@/apis";
 import ConsultantList from "@/components/ConsultantList";
+import NotificationIcon from "@/components/NotificationIcon";
 import UpcomingAppointmentSection from "@/components/UpcomingAppointmentSection";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { LinearGradient } from "expo-linear-gradient";
-import { Bell } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { unreadCount } = useNotifications();
   const [customerProfile, setCustomerProfile] = useState<{
     id: number;
     name: string;
     avatar?: string;
   } | null>(null);
+
   useEffect(() => {
     const fetchCustomerProfile = async () => {
       try {
@@ -54,9 +57,7 @@ export default function HomeScreen() {
               className="w-full h-full"
             />
           </View>
-          <TouchableOpacity className="w-11 h-11 rounded-full bg-white justify-center items-center shadow-sm">
-            <Bell size={24} color="#374151" />
-          </TouchableOpacity>
+          <NotificationIcon unreadCount={unreadCount} />
         </View>
 
         <View className="flex-row items-center justify-between px-5">
