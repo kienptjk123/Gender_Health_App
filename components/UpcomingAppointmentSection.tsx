@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
-import { appointmentApi } from "@/apis/appointment.api";
-import { Appointment } from "@/models/appointment.type";
+import { appointmentApi } from "@/apis/appointment";
+import { Appointment } from "@/models/appointment";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";

@@ -1,6 +1,6 @@
 import { stiApi } from "@/apis/sti.api";
 import { SafeAreaView } from "@/components/SafeArea";
-import StisTrackingSection from "@/components/STI/StisTrackingSection";
+import StisTrackingSection from "@/components/StisTrackingSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { Data } from "@/models/STI/sti.type";
 import { Ionicons } from "@expo/vector-icons";
