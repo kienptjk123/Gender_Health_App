@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { blogApi } from "../../apis/blog";
 import type { BlogPost } from "@/models/blog";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,16 +66,17 @@ export default function SearchPage() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#ffffff", paddingBottom: 20 }}>
+    <View style={{ flex: 1, backgroundColor: "#ffffff", paddingTop: 30 }}>
       {/* Header */}
       <View className="bg-white px-6 pt-4 pb-6 shadow-sm">
         <View className="flex-row items-center mb-6">
           <TouchableOpacity
             onPress={() => router.back()}
-            className="w-12 h-12 bg-pink-100 rounded-full items-center justify-center mr-4 shadow-sm"
+            className="w-10 h-10 bg-pink-100 rounded-full items-center justify-center mr-4 shadow-sm"
           >
-            <Text className="text-pink-500 text-xl font-bold">←</Text>
+            <Ionicons name="arrow-back" size={18} color="#EC4899" />
           </TouchableOpacity>
+
           <View className="flex-1">
             <Text className="text-2xl font-bold text-pink-400 mb-1">
               Search Articles
