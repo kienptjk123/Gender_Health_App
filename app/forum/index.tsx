@@ -16,9 +16,8 @@ import {
   View,
 } from "react-native";
 
-import { SafeArea } from "@/components/SafeArea";
-import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 
 export default function ForumTab() {
   const { user } = useAuth();
@@ -38,9 +37,9 @@ export default function ForumTab() {
   const [votingStates, setVotingStates] = useState<{
     [key: number]: {
       isVoting: boolean;
-      userVote?: "UP" | "DOWN";
+      isLiked: boolean;
       userVoteId?: number;
-      totalVotes: number;
+      totalLikes: number;
     };
   }>({});
   const [showMenuForQuestion, setShowMenuForQuestion] = useState<number | null>(
@@ -58,38 +57,44 @@ export default function ForumTab() {
         const votingData: {
           [key: number]: {
             isVoting: boolean;
-            userVote?: "UP" | "DOWN";
+            isLiked: boolean;
             userVoteId?: number;
-            totalVotes: number;
+            totalLikes: number;
           };
         } = {};
         for (const question of data) {
           try {
-            const votes = await voteApi.getByQuestionId(question.id);
+            const response = await voteApi.getVoteByQuestionId(question.id);
+            let votes: any[] = [];
+            if (response && Array.isArray(response.data)) {
+              votes = response.data;
+            } else {
+              votes = [];
+            }
             const userVote = votes.find(
-              (vote) =>
-                vote.customerProfileId === Number(user.customer_profile_id)
+              (vote) => vote.userId === Number(user.id)
             );
 
-            // Calculate total votes (UP votes - DOWN votes)
-            const upVotes = votes.filter(
+            // Count total likes (only UP votes count as likes)
+            const totalLikes = votes.filter(
               (vote) => vote.voteType === "UP"
             ).length;
-            const downVotes = votes.filter(
-              (vote) => vote.voteType === "DOWN"
-            ).length;
-            const totalVotes = upVotes - downVotes;
 
             votingData[question.id] = {
               isVoting: false,
-              userVote: userVote?.voteType,
+              isLiked: userVote?.voteType === "UP",
               userVoteId: userVote?.id,
-              totalVotes: totalVotes,
+              totalLikes: totalLikes,
             };
-          } catch {
+          } catch (error) {
+            console.warn(
+              `Failed to fetch votes for question ${question.id}:`,
+              error
+            );
             votingData[question.id] = {
               isVoting: false,
-              totalVotes: 0,
+              isLiked: false,
+              totalLikes: 0,
             };
           }
         }
@@ -120,12 +125,12 @@ export default function ForumTab() {
     setRefreshing(false);
   };
 
-  const handleVote = async (questionId: number, voteType: "UP" | "DOWN") => {
+  const handleVote = async (questionId: number) => {
     if (!user) {
       Toast.show({
         type: "error",
         text1: "Login Required",
-        text2: "Please log in to vote",
+        text2: "Please log in to like posts",
         position: "top",
       });
       return;
@@ -134,73 +139,96 @@ export default function ForumTab() {
     const currentVoteState = votingStates[questionId];
     if (currentVoteState?.isVoting) return;
 
+    // Ensure we have a valid voting state
+    const safeCurrentState = currentVoteState || {
+      isVoting: false,
+      isLiked: false,
+      totalLikes: 0,
+    };
+
     // Set voting state
     setVotingStates((prev) => ({
       ...prev,
       [questionId]: {
-        ...currentVoteState,
+        ...safeCurrentState,
         isVoting: true,
-        totalVotes: currentVoteState?.totalVotes || 0,
       },
     }));
 
     try {
-      const votes = await voteApi.getByQuestionId(questionId);
-      const userVote = votes.find(
-        (vote) => vote.customerProfileId === Number(user.customer_profile_id)
-      );
+      const response = await voteApi.getVoteByQuestionId(questionId);
+      let votes: any[] = [];
+      if (response && Array.isArray(response.data)) {
+        votes = response.data;
+      } else {
+        votes = [];
+      }
+      console.log("🔄 Votes fetched for question state 1", votes);
+      const userVote = votes.find((vote) => vote.userId === Number(user.id));
 
-      let newTotalVotes = currentVoteState?.totalVotes || 0;
-      let newUserVoteType: "UP" | "DOWN" | undefined;
+      let newTotalLikes = votes.filter((vote) => vote.voteType === "UP").length;
+      let newIsLiked: boolean;
       let newUserVoteId: number | undefined;
 
-      if (userVote) {
-        // User has already voted
-        if (userVote.voteType === voteType) {
-          // Same vote type - remove the vote
-          await voteApi.delete(userVote.id);
-          // Adjust total votes
-          newTotalVotes += userVote.voteType === "UP" ? -1 : 1;
-          newUserVoteType = undefined;
-          newUserVoteId = undefined;
-        } else {
-          // Different vote type - update the vote
-          const updatedVote = await voteApi.update(userVote.id, {
-            vote_type: voteType,
-          });
-          // Adjust total votes (remove old vote effect, add new vote effect)
-          newTotalVotes += userVote.voteType === "UP" ? -2 : 2;
-          newUserVoteType = voteType;
-          newUserVoteId = updatedVote.id;
-        }
-      } else {
-        // User hasn't voted yet - create new vote
-        const newVote = await voteApi.create({
-          vote_type: voteType,
-          question_id: questionId,
-        });
-        // Adjust total votes
-        newTotalVotes += voteType === "UP" ? 1 : -1;
-        newUserVoteType = voteType;
-        newUserVoteId = newVote.id;
-      }
+      console.log(
+        "🔄 Votes fetched for question state 2: checking type of userVote"
+      );
+      console.log("Fetch data:", userVote);
 
+      if (userVote && userVote.voteType === "UP") {
+        // User has already liked - remove the like
+        await voteApi.deleteVote(userVote.id);
+        newTotalLikes -= 1;
+        newIsLiked = false;
+        newUserVoteId = undefined;
+      } else {
+        if (userVote && userVote.voteType === "DOWN") {
+          // Delete existing DOWN vote and create new UP vote
+          await voteApi.deleteVote(userVote.id);
+          const newVote = await voteApi.createVote({
+            vote_type: "UP",
+            question_id: questionId,
+          });
+          newTotalLikes =
+            votes.filter((vote) => vote.voteType === "UP").length + 1;
+          newIsLiked = true;
+          newUserVoteId = newVote.data.id;
+        } else {
+          // Create new UP vote
+          const newVote = await voteApi.createVote({
+            vote_type: "UP",
+            question_id: questionId,
+            reply_id: undefined,
+          });
+          newTotalLikes += 1;
+          newIsLiked = true;
+          newUserVoteId = newVote.data.id;
+        }
+      }
+      console.log("🔄 Votes fetched for question state 3: newTotalLikes");
       // Update voting state with new values
       setVotingStates((prev) => ({
         ...prev,
         [questionId]: {
           isVoting: false,
-          userVote: newUserVoteType,
+          isLiked: newIsLiked,
           userVoteId: newUserVoteId,
-          totalVotes: newTotalVotes,
+          totalLikes: newTotalLikes,
         },
       }));
+
+      Toast.show({
+        type: "success",
+        text1: newIsLiked ? "Post Liked" : "Like Removed",
+        text2: newIsLiked ? "You liked this post" : "You removed your like",
+        position: "top",
+      });
     } catch (error) {
       console.error("Error voting:", error);
       Toast.show({
         type: "error",
-        text1: "Vote Failed",
-        text2: "Unable to register your vote",
+        text1: "Like Failed",
+        text2: "Unable to register your like. Please try again.",
         position: "top",
       });
 
@@ -208,9 +236,8 @@ export default function ForumTab() {
       setVotingStates((prev) => ({
         ...prev,
         [questionId]: {
-          ...currentVoteState,
+          ...safeCurrentState,
           isVoting: false,
-          totalVotes: currentVoteState?.totalVotes || 0,
         },
       }));
     }
@@ -517,415 +544,398 @@ export default function ForumTab() {
   };
 
   return (
-    <SafeArea backgroundColor="#ffffff" statusBarStyle="dark-content">
-      <View className="flex-1 bg-white">
-        <View className="bg-white px-4 py-4 shadow-sm border-b border-gray-100">
-          <View className="flex-row items-center">
-            <View className="w-10 h-10 bg-pink-100 rounded-full items-center justify-center mr-3">
-              <Text className="text-lg">🏥</Text>
-            </View>
-            <View>
-              <Text className="text-2xl font-bold text-pink-400">Forum</Text>
-            </View>
+    <View className="flex-1 bg-white">
+      <View className="bg-white px-4 py-4 shadow-sm border-b border-gray-100">
+        <View className="flex-row items-center">
+          <View className="w-10 h-10 bg-pink-100 rounded-full items-center justify-center mr-3">
+            <Text className="text-lg">🏥</Text>
+          </View>
+          <View>
+            <Text className="text-2xl font-bold text-pink-400">Forum</Text>
           </View>
         </View>
+      </View>
 
-        {/* Categories */}
-        <View className="bg-white border-b border-gray-100 px-4 py-2">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View className="flex-row gap-1 space-x-2">
-              {categories.map((category) => (
-                <TouchableOpacity
-                  key={category.id}
-                  onPress={() => {
-                    setShowMenuForQuestion(null); // Close any open menu
-                    setActiveCategory(category.id);
-                  }}
-                  className={`px-3 py-1.5 rounded-full flex-row items-center ${
+      <View className="bg-white border-b border-gray-100 px-4 py-2">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View className="flex-row gap-1 space-x-2">
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category.id}
+                onPress={() => {
+                  setShowMenuForQuestion(null); // Close any open menu
+                  setActiveCategory(category.id);
+                }}
+                className={`px-3 py-1.5 rounded-full flex-row items-center ${
+                  activeCategory === category.id ? "bg-pink-400" : "bg-pink-100"
+                }`}
+              >
+                <Text className="text-xs mr-1">{category.icon}</Text>
+                <Text
+                  className={`text-xs font-medium ${
                     activeCategory === category.id
-                      ? "bg-pink-400"
-                      : "bg-pink-100"
+                      ? "text-white"
+                      : "text-pink-600"
                   }`}
                 >
-                  <Text className="text-xs mr-1">{category.icon}</Text>
-                  <Text
-                    className={`text-xs font-medium ${
-                      activeCategory === category.id
-                        ? "text-white"
-                        : "text-pink-600"
-                    }`}
-                  >
-                    {category.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-        </View>
-
-        <ScrollView
-          className="flex-1"
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={["#f97316"]}
-              tintColor="#f97316"
-            />
-          }
-        >
-          {/* Loading State */}
-          {loading && (
-            <View className="flex-1 items-center justify-center py-20">
-              <ActivityIndicator size="large" color="#f97316" />
-              <Text className="text-gray-600 mt-4">Loading posts...</Text>
-            </View>
-          )}
-
-          {/* Empty State */}
-          {!loading && questions.length === 0 && (
-            <View className="flex-1 items-center justify-center py-20">
-              <Text className="text-6xl mb-4">�</Text>
-              <Text className="text-xl font-semibold text-gray-800 mb-2">
-                No posts yet
-              </Text>
-              <Text className="text-gray-600 text-center mb-6 px-8">
-                Be the first to share something with the community!
-              </Text>
-              <TouchableOpacity
-                className="bg-pink-400 px-6 py-3 rounded-full"
-                onPress={handleCreateQuestion}
-              >
-                <Text className="text-white font-semibold">
-                  Create First Post
+                  {category.name}
                 </Text>
               </TouchableOpacity>
-            </View>
-          )}
+            ))}
+          </View>
+        </ScrollView>
+      </View>
 
-          {/* Forum Questions */}
-          {!loading && filteredQuestions.length > 0 && (
-            <View>
-              {filteredQuestions.map((question, index) => (
-                <View
-                  key={question.id}
-                  className={`bg-white ${
-                    index === 0 ? "" : "border-t border-pink-100"
-                  }`}
+      <ScrollView
+        className="flex-1"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={["#f97316"]}
+            tintColor="#f97316"
+          />
+        }
+      >
+        {/* Loading State */}
+        {loading && (
+          <View className="flex-1 items-center justify-center py-20">
+            <ActivityIndicator size="large" color="#f97316" />
+            <Text className="text-gray-600 mt-4">Loading posts...</Text>
+          </View>
+        )}
+
+        {/* Empty State */}
+        {!loading && questions.length === 0 && (
+          <View className="flex-1 items-center justify-center py-20">
+            <Text className="text-6xl mb-4">�</Text>
+            <Text className="text-xl font-semibold text-gray-800 mb-2">
+              No posts yet
+            </Text>
+            <Text className="text-gray-600 text-center mb-6 px-8">
+              Be the first to share something with the community!
+            </Text>
+            <TouchableOpacity
+              className="bg-pink-400 px-6 py-3 rounded-full"
+              onPress={handleCreateQuestion}
+            >
+              <Text className="text-white font-semibold">
+                Create First Post
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Forum Questions */}
+        {!loading && filteredQuestions.length > 0 && (
+          <View>
+            {filteredQuestions.map((question, index) => (
+              <View
+                key={question.id}
+                className={`bg-white ${
+                  index === 0 ? "" : "border-t border-pink-100"
+                }`}
+              >
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowMenuForQuestion(null); // Close any open menu
+                    handleQuestionPress(question.id);
+                  }}
+                  className="flex-1 active:bg-pink-50"
                 >
-                  <TouchableOpacity
-                    onPress={() => {
-                      setShowMenuForQuestion(null); // Close any open menu
-                      handleQuestionPress(question.id);
-                    }}
-                    className="flex-1 active:bg-pink-50"
-                  >
-                    <View className="flex-row p-3">
-                      {/* Vote Section */}
-                      <View className="items-center mr-3 pt-1 w-10">
-                        <TouchableOpacity
-                          onPress={() => handleVote(question.id, "UP")}
-                          className={`p-1 rounded active:bg-pink-100 ${
-                            votingStates[question.id]?.userVote === "UP"
-                              ? "bg-pink-100"
-                              : ""
-                          }`}
-                        >
-                          <Text
-                            className={`text-base ${
-                              votingStates[question.id]?.userVote === "UP"
-                                ? "text-pink-400 font-bold"
-                                : "text-gray-400"
-                            }`}
-                          >
-                            ▲
+                  <View className="flex-row px-6 py-4">
+                    {/* Content Section */}
+                    <View className="flex-1">
+                      {/* Header with Owner Actions */}
+                      <View className="flex-row items-center justify-between mb-2">
+                        <View className="flex-row items-center flex-1">
+                          <Image
+                            source={{
+                              uri: question.customerProfile?.avatar || "",
+                            }}
+                            className="w-5 h-5 rounded-full mr-2"
+                            resizeMode="cover"
+                          />
+                          <Text className="text-xs text-gray-500">
+                            Posted by
+                            {question.customerProfile?.name || "anonymous"}
                           </Text>
-                        </TouchableOpacity>
-                        <Text className="text-xs font-bold text-pink-600 my-1 text-center">
-                          {votingStates[question.id]?.totalVotes || 0}
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() => handleVote(question.id, "DOWN")}
-                          className={`p-1 rounded active:bg-pink-100 ${
-                            votingStates[question.id]?.userVote === "DOWN"
-                              ? "bg-pink-100"
-                              : ""
-                          }`}
-                        >
-                          <Text
-                            className={`text-base ${
-                              votingStates[question.id]?.userVote === "DOWN"
-                                ? "text-pink-400 font-bold"
-                                : "text-gray-400"
-                            }`}
-                          >
-                            ▼
+                          <Text className="text-xs text-gray-400 mx-1">•</Text>
+                          <Text className="text-xs text-gray-500">
+                            {formatTime(question.createdAt)}
                           </Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      {/* Content Section */}
-                      <View className="flex-1">
-                        {/* Header with Owner Actions */}
-                        <View className="flex-row items-center justify-between mb-2">
-                          <View className="flex-row items-center flex-1">
-                            <Image
-                              source={{
-                                uri: question.customerProfile?.avatar || "",
-                              }}
-                              className="w-5 h-5 rounded-full mr-2"
-                              resizeMode="cover"
-                            />
-                            <Text className="text-xs text-gray-500">
-                              Posted by{" "}
-                              {question.customerProfile?.name || "anonymous"}
-                            </Text>
-                            <Text className="text-xs text-gray-400 mx-1">
-                              •
-                            </Text>
-                            <Text className="text-xs text-gray-500">
-                              {formatTime(question.createdAt)}
-                            </Text>
-                          </View>
-
-                          {/* Owner Actions - Only show dots for question owner */}
-                          {user &&
-                            question.customerProfileId ===
-                              Number(user.customer_profile_id) && (
-                              <View className="relative">
-                                <TouchableOpacity
-                                  onPress={() =>
-                                    toggleQuestionMenu(question.id)
-                                  }
-                                  className="p-1 rounded active:bg-gray-100"
-                                >
-                                  <Text className="text-gray-400 text-base">
-                                    ⋯
-                                  </Text>
-                                </TouchableOpacity>
-
-                                {/* Dropdown Menu */}
-                                {showMenuForQuestion === question.id && (
-                                  <View className="absolute top-8 right-0 bg-white border border-pink-200 rounded-lg shadow-lg z-10 min-w-[120px]">
-                                    <TouchableOpacity
-                                      onPress={() => {
-                                        setShowMenuForQuestion(null);
-                                        handleEditQuestion(question);
-                                      }}
-                                      className="flex-row items-center px-3 py-2 active:bg-pink-50"
-                                    >
-                                      <Text className="text-pink-400 text-sm mr-2">
-                                        ✏️
-                                      </Text>
-                                      <Text className="text-gray-700 text-sm">
-                                        Edit
-                                      </Text>
-                                    </TouchableOpacity>
-                                    <View className="border-t border-pink-100" />
-                                    <TouchableOpacity
-                                      onPress={() => {
-                                        setShowMenuForQuestion(null);
-                                        handleDeleteQuestion(question.id);
-                                      }}
-                                      className="flex-row items-center px-3 py-2 active:bg-pink-50"
-                                    >
-                                      <Text className="text-red-500 text-sm mr-2">
-                                        🗑️
-                                      </Text>
-                                      <Text className="text-gray-700 text-sm">
-                                        Delete
-                                      </Text>
-                                    </TouchableOpacity>
-                                  </View>
-                                )}
-                              </View>
-                            )}
                         </View>
 
-                        {/* Title */}
-                        <Text className="text-base font-medium text-gray-900 mb-2 leading-5">
-                          {question.title}
-                        </Text>
+                        {/* Owner Actions - Only show dots for question owner */}
+                        {user &&
+                          question.customerProfileId ===
+                            Number(user.customer_profile_id) && (
+                            <View className="relative">
+                              <TouchableOpacity
+                                onPress={() => toggleQuestionMenu(question.id)}
+                                className="p-1 rounded active:bg-gray-100"
+                              >
+                                <Text className="text-gray-400 text-base">
+                                  ⋯
+                                </Text>
+                              </TouchableOpacity>
 
-                        {/* Content */}
-                        <Text
-                          className="text-sm text-gray-700 mb-3 leading-5"
-                          numberOfLines={3}
-                        >
-                          {question.content}
-                        </Text>
+                              {/* Dropdown Menu */}
+                              {showMenuForQuestion === question.id && (
+                                <View className="absolute top-8 right-0 bg-white border border-pink-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      setShowMenuForQuestion(null);
+                                      handleEditQuestion(question);
+                                    }}
+                                    className="flex-row items-center px-3 py-2 active:bg-pink-50"
+                                  >
+                                    <Text className="text-pink-400 text-sm mr-2">
+                                      ✏️
+                                    </Text>
+                                    <Text className="text-gray-700 text-sm">
+                                      Edit
+                                    </Text>
+                                  </TouchableOpacity>
+                                  <View className="border-t border-pink-100" />
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      setShowMenuForQuestion(null);
+                                      handleDeleteQuestion(question.id);
+                                    }}
+                                    className="flex-row items-center px-3 py-2 active:bg-pink-50"
+                                  >
+                                    <Text className="text-red-500 text-sm mr-2">
+                                      🗑️
+                                    </Text>
+                                    <Text className="text-gray-700 text-sm">
+                                      Delete
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+                            </View>
+                          )}
+                      </View>
 
-                        {/* Image */}
-                        {question.image && (
-                          <View className="mb-3">
-                            <Image
-                              source={{ uri: question.image }}
-                              className="w-full h-48 rounded-lg"
-                              resizeMode="cover"
-                            />
-                          </View>
-                        )}
+                      {/* Title */}
+                      <Text className="text-base font-medium text-gray-900 mb-2 leading-5">
+                        {question.title}
+                      </Text>
 
-                        {/* Actions */}
-                        <Text className="flex-row items-center pt-2">
-                          <TouchableOpacity className="flex-row items-center mr-4 py-1 px-2 rounded active:bg-gray-100">
+                      {/* Content */}
+                      <Text
+                        className="text-sm text-gray-700 mb-3 leading-5"
+                        numberOfLines={3}
+                      >
+                        {question.content}
+                      </Text>
+
+                      {/* Image */}
+                      {question.image && (
+                        <View className="mb-3">
+                          <Image
+                            source={{ uri: question.image }}
+                            className="w-full h-48 rounded-lg"
+                            resizeMode="cover"
+                          />
+                        </View>
+                      )}
+
+                      {/* Like, Share, Replies - One Line Section */}
+                      <View className="flex-row items-center justify-between py-2 border-t border-gray-100">
+                        <View className="flex-row items-center flex-1">
+                          <TouchableOpacity
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handleVote(question.id);
+                            }}
+                            className="flex-row items-center py-2 px-3 rounded-full active:bg-pink-50"
+                            disabled={votingStates[question.id]?.isVoting}
+                          >
+                            <Text
+                              className={`text-xl mr-2 ${
+                                votingStates[question.id]?.isVoting
+                                  ? "opacity-50"
+                                  : ""
+                              }`}
+                            >
+                              {votingStates[question.id]?.isLiked ? "❤️" : "🤍"}
+                            </Text>
+                            <Text className="text-sm font-medium text-gray-700">
+                              {votingStates[question.id]?.isVoting
+                                ? "..."
+                                : `${
+                                    votingStates[question.id]?.totalLikes || 0
+                                  } ${
+                                    (votingStates[question.id]?.totalLikes ||
+                                      0) === 1
+                                      ? "like"
+                                      : "likes"
+                                  }`}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              // Could add share functionality here later
+                            }}
+                            className="flex-row items-center py-2 px-3 rounded-full active:bg-gray-50 ml-2"
+                          >
+                            <Text className="text-gray-400 text-base mr-1">
+                              📤
+                            </Text>
+                            <Text className="text-xs text-gray-500 font-medium">
+                              Share
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity className="flex-row items-center py-2 px-3 rounded active:bg-gray-100 ml-2">
                             <Text className="text-gray-400 text-base mr-1">
                               💬
                             </Text>
                             <Text className="text-xs text-gray-500 font-medium">
-                              {question._count?.replies || 0}
+                              {question._count?.replies || 0} replies
                             </Text>
                           </TouchableOpacity>
-
-                          <TouchableOpacity className="flex-row items-center justify-between mr-4 py-1 px-2 rounded active:bg-gray-100">
-                            <Text className="flex-row items-center">
-                              <Text className="text-gray-400 text-base mr-1">
-                                📤
-                              </Text>
-                              <Text className="text-xs text-gray-500 font-medium">
-                                Share
-                              </Text>
-                            </Text>
-                          </TouchableOpacity>
-                        </Text>
+                        </View>
                       </View>
                     </View>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
-        </ScrollView>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
 
-        {/* Floating Action Button */}
-        <View className="absolute bottom-4 right-4">
-          <TouchableOpacity
-            className="w-14 h-14 bg-pink-400 rounded-full items-center justify-center shadow-lg"
-            onPress={handleCreateQuestion}
-          >
-            <Text className="text-white font-bold text-xl">+</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Create/Edit Question Modal */}
-        <Modal
-          visible={showCreateModal}
-          animationType="slide"
-          transparent
-          onRequestClose={handleCloseModal}
+      {/* Floating Action Button */}
+      <View className="absolute bottom-4 right-4">
+        <TouchableOpacity
+          className="w-14 h-14 bg-pink-400 rounded-full items-center justify-center shadow-lg"
+          onPress={handleCreateQuestion}
         >
-          <View className="flex-1 justify-center bg-black bg-opacity-50">
-            <View className="bg-white rounded-lg mx-4">
-              {/* Header */}
-              <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-                <Text className="text-lg font-semibold text-gray-900">
-                  {editingQuestion ? "Edit Question" : "Create Question"}
-                </Text>
-                <TouchableOpacity
-                  onPress={handleCloseModal}
-                  className="p-2 rounded-full hover:bg-gray-100"
-                >
-                  <Text className="text-gray-500 text-lg">×</Text>
-                </TouchableOpacity>
-              </View>
+          <Text className="text-white font-bold text-xl">+</Text>
+        </TouchableOpacity>
+      </View>
 
-              {/* Content */}
-              <View className="p-4">
-                <TextInput
-                  value={newQuestionTitle}
-                  onChangeText={setNewQuestionTitle}
-                  placeholder="Question Title"
-                  className="border border-gray-300 rounded-lg px-3 py-2 mb-4 text-sm"
-                  multiline
-                  numberOfLines={2}
-                />
-                <TextInput
-                  value={newQuestionContent}
-                  onChangeText={setNewQuestionContent}
-                  placeholder="Describe your question..."
-                  className="border border-gray-300 rounded-lg px-3 py-2 mb-4 text-sm"
-                  multiline
-                  numberOfLines={4}
-                />
+      {/* Create/Edit Question Modal */}
+      <Modal
+        visible={showCreateModal}
+        animationType="slide"
+        transparent
+        onRequestClose={handleCloseModal}
+      >
+        <View className="flex-1 justify-center bg-black bg-opacity-50">
+          <View className="bg-white rounded-lg mx-4">
+            {/* Header */}
+            <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
+              <Text className="text-lg font-semibold text-gray-900">
+                {editingQuestion ? "Edit Question" : "Create Question"}
+              </Text>
+              <TouchableOpacity
+                onPress={handleCloseModal}
+                className="p-2 rounded-full hover:bg-gray-100"
+              >
+                <Text className="text-gray-500 text-lg">×</Text>
+              </TouchableOpacity>
+            </View>
 
-                {/* Image Selection Section */}
-                <View className="mb-4">
-                  {selectedImage ? (
-                    <View>
-                      <Image
-                        source={{ uri: selectedImage }}
-                        className="w-full h-48 rounded-lg mb-2"
-                        resizeMode="cover"
-                      />
-                      <View className="flex-row space-x-2">
-                        <TouchableOpacity
-                          onPress={pickImage}
-                          className="flex-1 bg-blue-500 rounded-lg px-4 py-2"
-                        >
-                          <Text className="text-white text-center text-sm font-semibold">
-                            📸 Change Image
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={removeImage}
-                          className="flex-1 bg-red-500 rounded-lg px-4 py-2"
-                        >
-                          <Text className="text-white text-center text-sm font-semibold">
-                            🗑️ Remove Image
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
+            {/* Content */}
+            <View className="p-4">
+              <TextInput
+                value={newQuestionTitle}
+                onChangeText={setNewQuestionTitle}
+                placeholder="Question Title"
+                className="border border-gray-300 rounded-lg px-3 py-2 mb-4 text-sm"
+                multiline
+                numberOfLines={2}
+              />
+              <TextInput
+                value={newQuestionContent}
+                onChangeText={setNewQuestionContent}
+                placeholder="Describe your question..."
+                className="border border-gray-300 rounded-lg px-3 py-2 mb-4 text-sm"
+                multiline
+                numberOfLines={4}
+              />
+
+              {/* Image Selection Section */}
+              <View className="mb-4">
+                {selectedImage ? (
+                  <View>
+                    <Image
+                      source={{ uri: selectedImage }}
+                      className="w-full h-48 rounded-lg mb-2"
+                      resizeMode="cover"
+                    />
+                    <View className="flex-row space-x-2">
+                      <TouchableOpacity
+                        onPress={pickImage}
+                        className="flex-1 bg-blue-500 rounded-lg px-4 py-2"
+                      >
+                        <Text className="text-white text-center text-sm font-semibold">
+                          📸 Change Image
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={removeImage}
+                        className="flex-1 bg-red-500 rounded-lg px-4 py-2"
+                      >
+                        <Text className="text-white text-center text-sm font-semibold">
+                          🗑️ Remove Image
+                        </Text>
+                      </TouchableOpacity>
                     </View>
-                  ) : (
-                    <TouchableOpacity
-                      onPress={pickImage}
-                      className="bg-pink-400 rounded-lg px-4 py-2"
-                    >
-                      <Text className="text-white text-center text-sm font-semibold">
-                        📸 Add Image from Gallery
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-
-              {/* Footer */}
-              <View className="flex-row justify-end px-4 py-3 border-t border-gray-200">
-                <TouchableOpacity
-                  onPress={handleCloseModal}
-                  className="bg-gray-200 rounded-lg px-4 py-2 mr-2"
-                >
-                  <Text className="text-gray-700 text-sm font-semibold">
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleCreateOrUpdateQuestion}
-                  disabled={createLoading}
-                  className={`rounded-lg px-4 py-2 ${
-                    createLoading ? "bg-gray-400" : "bg-pink-400"
-                  }`}
-                >
-                  {createLoading ? (
-                    <View className="flex-row items-center justify-center">
-                      <ActivityIndicator size="small" color="white" />
-                      <Text className="text-white text-sm font-semibold ml-2">
-                        {editingQuestion ? "Updating..." : "Posting..."}
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text className="text-white text-sm font-semibold">
-                      {editingQuestion ? "Update Question" : "Post Question"}
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={pickImage}
+                    className="bg-pink-400 rounded-lg px-4 py-2"
+                  >
+                    <Text className="text-white text-center text-sm font-semibold">
+                      📸 Add Image from Gallery
                     </Text>
-                  )}
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                )}
               </View>
+            </View>
+
+            {/* Footer */}
+            <View className="flex-row justify-end px-4 py-3 border-t border-gray-200">
+              <TouchableOpacity
+                onPress={handleCloseModal}
+                className="bg-gray-200 rounded-lg px-4 py-2 mr-2"
+              >
+                <Text className="text-gray-700 text-sm font-semibold">
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleCreateOrUpdateQuestion}
+                disabled={createLoading}
+                className={`rounded-lg px-4 py-2 ${
+                  createLoading ? "bg-gray-400" : "bg-pink-400"
+                }`}
+              >
+                {createLoading ? (
+                  <View className="flex-row items-center justify-center">
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white text-sm font-semibold ml-2">
+                      {editingQuestion ? "Updating..." : "Posting..."}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="text-white text-sm font-semibold">
+                    {editingQuestion ? "Update Question" : "Post Question"}
+                  </Text>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
+        </View>
+      </Modal>
 
-        <Toast />
-      </View>
-    </SafeArea>
+      <Toast />
+    </View>
   );
 }

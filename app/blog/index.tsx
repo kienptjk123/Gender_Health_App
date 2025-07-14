@@ -6,7 +6,6 @@ import {
   Image,
   FlatList,
   Dimensions,
-  TextInput,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
@@ -22,7 +21,6 @@ export default function BlogTab() {
   const [popularBlogs, setPopularBlogs] = useState<BlogPost[]>([]);
   const [filteredBlogs, setFilteredBlogs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
   const fetchBlogs = async () => {
@@ -48,22 +46,6 @@ export default function BlogTab() {
       console.error("❌ Error fetching blogs:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim() === "") {
-      setFilteredBlogs(popularBlogs);
-    } else {
-      const filtered = popularBlogs.filter(
-        (blog) =>
-          blog.title.toLowerCase().includes(query.toLowerCase()) ||
-          blog.tags?.some((tagObj: any) =>
-            tagObj.tag.name.toLowerCase().includes(query.toLowerCase())
-          )
-      );
-      setFilteredBlogs(filtered);
     }
   };
 
@@ -167,19 +149,18 @@ export default function BlogTab() {
           </View>
 
           {/* Search Bar */}
-          <View className="flex-row items-center bg-pink-50 rounded-2xl px-4 py-3">
+          <TouchableOpacity
+            onPress={() => router.push("/blog/search")}
+            className="flex-row items-center bg-pink-50 rounded-2xl px-4 py-3 border border-pink-200"
+          >
             <Search size={20} color="#f472b6" />
-            <TextInput
-              placeholder="Find interesting news"
-              placeholderTextColor="#f472b6"
-              className="flex-1 ml-3 text-pink-400"
-              value={searchQuery}
-              onChangeText={handleSearch}
-            />
-          </View>
+            <Text className="flex-1 ml-3 text-pink-400">
+              Find interesting news
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        <View className="px-6 py-6 bg-white">
+        <View className="px-6 py-3 bg-white">
           {/* Featured Articles Carousel */}
           {featuredBlogs.length > 0 && (
             <View className="mb-8">
@@ -199,9 +180,6 @@ export default function BlogTab() {
           {/* Popular Section */}
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-xl font-bold text-pink-400">Recommended</Text>
-            <TouchableOpacity>
-              <Text className="text-pink-400 font-medium">See More</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Popular Articles */}

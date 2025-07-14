@@ -96,3 +96,15 @@ export interface UserVoteState {
   userVoteId?: number;
   totalVotes: number;
 }
+
+export interface VoteResponse {
+  data: VoteData[];
+  message: string;
+  status: number;
+}
+
+export interface VoteResponseCreate {
+  data: VoteData;
+  message: string;
+  status: number;
+}

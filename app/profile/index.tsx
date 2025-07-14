@@ -102,10 +102,7 @@ export default function ProfileTab() {
   const profileSections = [
     {
       title: "Personal Information",
-      items: [
-        { label: "Edit Profile", icon: "✏️", action: handleEditProfile },
-        { label: "Cycle Settings", icon: "🔄", action: () => {} },
-      ],
+      items: [{ label: "Edit Profile", icon: "✏️", action: handleEditProfile }],
     },
     {
       title: "Health & Consultations",
@@ -120,17 +117,6 @@ export default function ProfileTab() {
           icon: "🧪",
           action: () => router.push("/stiTracking" as any),
         },
-        { label: "Health Records", icon: "🏥", action: () => {} },
-        { label: "Symptoms Tracker", icon: "�", action: () => {} },
-      ],
-    },
-    {
-      title: "App Settings",
-      items: [
-        { label: "Notifications", icon: "🔔", action: () => {} },
-        { label: "Privacy", icon: "🔒", action: () => {} },
-        { label: "Data Export", icon: "📤", action: () => {} },
-        { label: "Backup & Sync", icon: "☁️", action: () => {} },
       ],
     },
     {

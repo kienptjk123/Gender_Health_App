@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 
-import { bookConsultApi } from "@/apis/bookConsult.api";
+import { bookConsultApi } from "@/apis/bookConsult";
 import ConsultantDetailScreen from "@/components/ConsultantDetailScreen";
 import { useAuth } from "@/contexts/AuthContext";
 import { Consultant } from "@/models/BookingConsultant/bookingConsult.type";

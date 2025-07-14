@@ -1,12 +1,13 @@
-import { apiService } from "../utils/fetcher";
 import type {
   QuestionData,
   QuestionRequest,
   ReplyData,
   ReplyRequest,
-  VoteData,
   VoteRequest,
+  VoteResponse,
+  VoteResponseCreate,
 } from "../models/forum";
+import { apiService } from "../utils/fetcher";
 
 export const questionApi = {
   getAll: async (): Promise<QuestionData[]> => {
@@ -93,30 +94,41 @@ export const replyApi = {
 };
 
 export const voteApi = {
-  getByQuestionId: async (questionId: number): Promise<VoteData[]> => {
-    const response = await apiService.get(`/votes/question/${questionId}`);
-    return (response.data as any).data as VoteData[];
+  createVote: async (data: VoteRequest): Promise<VoteResponseCreate> => {
+    try {
+      const response = await apiService.post("/votes/create", data);
+      return response.data as VoteResponseCreate;
+    } catch (error) {
+      console.error("Failed to create reply:", error);
+      throw error;
+    }
+  },
+  getVoteByQuestionId: async (questionId: number): Promise<VoteResponse> => {
+    try {
+      const response = await apiService.get(`/votes/question/${questionId}`);
+      return response.data as VoteResponse;
+    } catch (error) {
+      console.error("Failed to fetch reply by ID:", error);
+      throw error;
+    }
+  },
+  getVoteByReplyId: async (replyId: number): Promise<VoteResponse> => {
+    try {
+      const response = await apiService.get(`/votes/reply/${replyId}`);
+      return response.data as VoteResponse;
+    } catch (error) {
+      console.error("Failed to fetch reply by ID:", error);
+      throw error;
+    }
   },
 
-  getByReplyId: async (replyId: number): Promise<VoteData[]> => {
-    const response = await apiService.get(`/votes/reply/${replyId}`);
-    return (response.data as any).data as VoteData[];
-  },
-
-  create: async (payload: VoteRequest): Promise<VoteData> => {
-    const response = await apiService.post("/votes/create", payload);
-    return (response.data as any).data as VoteData;
-  },
-
-  update: async (
-    id: number,
-    payload: { vote_type: "UP" | "DOWN" }
-  ): Promise<VoteData> => {
-    const response = await apiService.put(`/votes/update/${id}`, payload);
-    return (response.data as any).data as VoteData;
-  },
-
-  delete: async (id: number): Promise<void> => {
-    await apiService.delete(`/votes/delete/${id}`);
+  deleteVote: async (id: number): Promise<{ message: string }> => {
+    try {
+      const response = await apiService.delete(`/votes/delete/${id}`);
+      return response.data as { message: string };
+    } catch (error) {
+      console.error("Failed to delete reply:", error);
+      throw error;
+    }
   },
 };

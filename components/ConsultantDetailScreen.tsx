@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import { useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,7 +10,7 @@ import BookingConfirmation from "./BookingConfirmation";
 interface ConsultantDetailScreenProps {
   consultant: Consultant;
   customerProfileId: number;
-  onBack?: () => void;
+  onBack: () => void;
 }
 
 export default function ConsultantDetailScreen({
@@ -37,20 +36,6 @@ export default function ConsultantDetailScreen({
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white shadow-sm">
-        <TouchableOpacity
-          onPress={onBack || (() => router.back())}
-          className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
-        >
-          <Ionicons name="chevron-back" size={24} color="#374151" />
-        </TouchableOpacity>
-        <Text className="text-lg font-semibold text-gray-800">
-          Consultant Details
-        </Text>
-        <View className="w-10" />
-      </View>
-
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Cover Photo & Profile */}
         <View className="relative">
@@ -63,6 +48,19 @@ export default function ConsultantDetailScreen({
             colors={["transparent", "rgba(0,0,0,0.6)"]}
             className="absolute bottom-0 left-0 right-0 h-24"
           />
+
+          {/* Header with back button overlay */}
+          <View className="absolute top-12 left-0 right-0 flex-row justify-between items-center px-4">
+            <TouchableOpacity
+              onPress={onBack}
+              className="w-10 h-10 rounded-full bg-white/90 justify-center items-center shadow-md"
+            >
+              <Ionicons name="arrow-back" size={24} color="#EC4899" />
+            </TouchableOpacity>
+            <TouchableOpacity className="w-10 h-10 rounded-full bg-white/90 justify-center items-center shadow-md">
+              <Ionicons name="bookmark-outline" size={24} color="#EC4899" />
+            </TouchableOpacity>
+          </View>
 
           {/* Profile Avatar */}
           <View className="absolute -bottom-12 left-6">

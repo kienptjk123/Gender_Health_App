@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
-import { appointmentApi } from "@/apis/appointment.api";
-import { Appointment } from "@/models/appointment.type";
+import { appointmentApi } from "@/apis/appointment";
+import { Appointment } from "@/models/appointment";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -25,13 +25,13 @@ export default function UpcomingAppointmentSection({
 
   dayjs.extend(utc);
 
-  const dateStr = dayjs.utc(appointment.scheduledAt).format("ddd, D MMM YYYY");
+  const dateStr = dayjs.utc(appointment.scheduleAt).format("ddd, D MMM YYYY");
   const timeStr = `${dayjs.utc(appointment.startedAt).format("HH:mm")} - ${dayjs
     .utc(appointment.endedAt)
     .format("HH:mm")}`;
 
   return (
-    <View className="px-5 pb-24">
+    <View className="px-5 pb-4">
       {/* Section Header */}
       <View className="flex-row justify-between items-center mb-5">
         <Text className="text-2xl font-bold text-gray-800">My Appointment</Text>

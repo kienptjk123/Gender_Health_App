@@ -27,9 +27,7 @@ export default function MenstrualCycleIndex() {
         const profile = res.result;
         const uid = String(profile.id);
         setUserId(uid);
-
         const { step, cycleId } = await getCycleProgress(uid);
-
         setStep(step);
         setCycleId(cycleId ?? null);
       } catch (err) {
