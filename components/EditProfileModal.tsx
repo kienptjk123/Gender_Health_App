@@ -150,7 +150,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </View>
 
           {/* Form */}
-          <View className="bg-white rounded-xl mx-5 p-5 mb-6 shadow-sm">
+          <View
+            className="bg-white rounded-xl mx-5 p-5 mb-6 shadow-lg"
+            style={{ shadowColor: "#F9A8D4" }}
+          >
             {[
               { label: "Full Name", key: "name", keyboard: "default" },
               { label: "Email", key: "email", keyboard: "email-address" },

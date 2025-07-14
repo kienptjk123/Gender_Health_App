@@ -15,7 +15,7 @@ import TestSection from "../../components/TestSection";
 
 export default function AllTestsPage() {
   const router = useRouter();
-  
+
   // Debug router context
   useEffect(() => {
     console.log("=== Router Context Debug ===");
@@ -138,47 +138,50 @@ export default function AllTestsPage() {
     return map;
   }, [testPackages, getPackageColor]);
 
-  const toggleSection = useCallback((sectionName: string) => {
-    console.log("=== Toggle Section Debug ===");
-    console.log("Toggling section:", sectionName);
-    console.log("Available typeOfTests:", typeOfTests?.length || 0);
-    console.log("Available testPackages:", testPackages?.length || 0);
-    console.log("Current expanded sections:", expandedSections);
-    console.log("Router available:", !!router);
-    
-    // Prevent toggle if data not ready
-    if (!typeOfTests.length || !testPackages.length) {
-      console.warn("Data not ready, skipping toggle");
-      return;
-    }
+  const toggleSection = useCallback(
+    (sectionName: string) => {
+      console.log("=== Toggle Section Debug ===");
+      console.log("Toggling section:", sectionName);
+      console.log("Available typeOfTests:", typeOfTests?.length || 0);
+      console.log("Available testPackages:", testPackages?.length || 0);
+      console.log("Current expanded sections:", expandedSections);
+      console.log("Router available:", !!router);
 
-    // Clear previous debounce timer
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-
-    // Debounce the toggle operation
-    const timer = setTimeout(() => {
-      try {
-        // Use InteractionManager to prevent UI blocking
-        InteractionManager.runAfterInteractions(() => {
-          console.log("Executing toggle for:", sectionName);
-          setExpandedSections((prev) => {
-            const newState = {
-              ...prev,
-              [sectionName]: !prev[sectionName],
-            };
-            console.log("New expanded state:", newState);
-            return newState;
-          });
-        });
-      } catch (error) {
-        console.error("Toggle section error:", error);
+      // Prevent toggle if data not ready
+      if (!typeOfTests.length || !testPackages.length) {
+        console.warn("Data not ready, skipping toggle");
+        return;
       }
-    }, 100) as unknown as number; // 100ms debounce
 
-    setDebounceTimer(timer);
-  }, [typeOfTests, testPackages, expandedSections, router, debounceTimer]);
+      // Clear previous debounce timer
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+
+      // Debounce the toggle operation
+      const timer = setTimeout(() => {
+        try {
+          // Use InteractionManager to prevent UI blocking
+          InteractionManager.runAfterInteractions(() => {
+            console.log("Executing toggle for:", sectionName);
+            setExpandedSections((prev) => {
+              const newState = {
+                ...prev,
+                [sectionName]: !prev[sectionName],
+              };
+              console.log("New expanded state:", newState);
+              return newState;
+            });
+          });
+        } catch (error) {
+          console.error("Toggle section error:", error);
+        }
+      }, 100) as unknown as number; // 100ms debounce
+
+      setDebounceTimer(timer);
+    },
+    [typeOfTests, testPackages, expandedSections, router, debounceTimer]
+  );
 
   if (loading) {
     return (
