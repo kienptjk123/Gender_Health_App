@@ -94,6 +94,13 @@ export default function BottomTabs() {
       isActive: pathname === "/" || pathname.includes("/(tabs)"),
     },
     {
+      name: "Test",
+      iconName: "flask",
+      iconFamily: "FontAwesome5" as const,
+      route: "/(tabs)/test",
+      isActive: pathname.includes("/test"),
+    },
+    {
       name: "Cycle",
       iconName: "flower",
       iconFamily: "Ionicons" as const,
@@ -106,27 +113,6 @@ export default function BottomTabs() {
       iconFamily: "Ionicons" as const,
       route: "/(tabs)/chatbot",
       isActive: pathname.includes("/chatbot"),
-    },
-    {
-      name: "Blog",
-      iconName: "library",
-      iconFamily: "Ionicons" as const,
-      route: "/(tabs)/blog",
-      isActive: pathname.includes("/blog"),
-    },
-    {
-      name: "Forum",
-      iconName: "forum",
-      iconFamily: "MaterialIcons" as const,
-      route: "/(tabs)/forum",
-      isActive: pathname.includes("/forum"),
-    },
-    {
-      name: "Test",
-      iconName: "flask",
-      iconFamily: "FontAwesome5" as const,
-      route: "/(tabs)/test",
-      isActive: pathname.includes("/test"),
     },
     {
       name: "Profile",

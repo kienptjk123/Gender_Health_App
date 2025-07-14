@@ -1,5 +1,6 @@
 import { authService } from "@/apis";
 import ConsultantList from "@/components/ConsultantList";
+import HealthServicesSwiper from "@/components/HealthServicesSwiper";
 import NotificationIcon from "@/components/NotificationIcon";
 import UpcomingAppointmentSection from "@/components/UpcomingAppointmentSection";
 import { useAuth } from "@/contexts/AuthContext";
@@ -85,33 +86,9 @@ export default function HomeScreen() {
         </View>
       </LinearGradient>
 
-      {/* Ecare Services Section */}
+      {/* Health Services Section */}
       <View className="px-5 pt-8">
-        <Text className="text-2xl font-bold text-gray-800 mb-5">
-          Ecare Services
-        </Text>
-        <View className="flex-row justify-between mb-8">
-          <TouchableOpacity className="items-center flex-1">
-            <View className="w-16 h-16 rounded-full bg-gray-100 justify-center items-center mb-3">
-              <Text className="text-3xl">👨‍⚕️</Text>
-            </View>
-            <Text className="text-sm text-gray-500 font-medium">
-              Consultation
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="items-center flex-1">
-            <View className="w-16 h-16 rounded-full bg-gray-100 justify-center items-center mb-3">
-              <Text className="text-3xl">💊</Text>
-            </View>
-            <Text className="text-sm text-gray-500 font-medium">Medicines</Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="items-center flex-1">
-            <View className="w-16 h-16 rounded-full bg-gray-100 justify-center items-center mb-3">
-              <Text className="text-3xl">🚑</Text>
-            </View>
-            <Text className="text-sm text-gray-500 font-medium">Ambulance</Text>
-          </TouchableOpacity>
-        </View>
+        <HealthServicesSwiper />
       </View>
       <View className="p-4">
         {customerProfile?.id ? (
