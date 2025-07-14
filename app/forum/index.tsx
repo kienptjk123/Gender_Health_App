@@ -16,9 +16,8 @@ import {
   View,
 } from "react-native";
 
-import { SafeArea } from "@/components/SafeArea";
-import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 
 export default function ForumTab() {
   const { user } = useAuth();
@@ -38,9 +37,9 @@ export default function ForumTab() {
   const [votingStates, setVotingStates] = useState<{
     [key: number]: {
       isVoting: boolean;
-      userVote?: "UP" | "DOWN";
+      isLiked: boolean;
       userVoteId?: number;
-      totalVotes: number;
+      totalLikes: number;
     };
   }>({});
   const [showMenuForQuestion, setShowMenuForQuestion] = useState<number | null>(
@@ -58,38 +57,44 @@ export default function ForumTab() {
         const votingData: {
           [key: number]: {
             isVoting: boolean;
-            userVote?: "UP" | "DOWN";
+            isLiked: boolean;
             userVoteId?: number;
-            totalVotes: number;
+            totalLikes: number;
           };
         } = {};
         for (const question of data) {
           try {
-            const votes = await voteApi.getByQuestionId(question.id);
+            const response = await voteApi.getVoteByQuestionId(question.id);
+            let votes: any[] = [];
+            if (response && Array.isArray(response.data)) {
+              votes = response.data;
+            } else {
+              votes = [];
+            }
             const userVote = votes.find(
-              (vote) =>
-                vote.customerProfileId === Number(user.customer_profile_id)
+              (vote) => vote.userId === Number(user.id)
             );
 
-            // Calculate total votes (UP votes - DOWN votes)
-            const upVotes = votes.filter(
+            // Count total likes (only UP votes count as likes)
+            const totalLikes = votes.filter(
               (vote) => vote.voteType === "UP"
             ).length;
-            const downVotes = votes.filter(
-              (vote) => vote.voteType === "DOWN"
-            ).length;
-            const totalVotes = upVotes - downVotes;
 
             votingData[question.id] = {
               isVoting: false,
-              userVote: userVote?.voteType,
+              isLiked: userVote?.voteType === "UP",
               userVoteId: userVote?.id,
-              totalVotes: totalVotes,
+              totalLikes: totalLikes,
             };
-          } catch {
+          } catch (error) {
+            console.warn(
+              `Failed to fetch votes for question ${question.id}:`,
+              error
+            );
             votingData[question.id] = {
               isVoting: false,
-              totalVotes: 0,
+              isLiked: false,
+              totalLikes: 0,
             };
           }
         }
@@ -120,12 +125,12 @@ export default function ForumTab() {
     setRefreshing(false);
   };
 
-  const handleVote = async (questionId: number, voteType: "UP" | "DOWN") => {
+  const handleVote = async (questionId: number) => {
     if (!user) {
       Toast.show({
         type: "error",
         text1: "Login Required",
-        text2: "Please log in to vote",
+        text2: "Please log in to like posts",
         position: "top",
       });
       return;
@@ -134,73 +139,96 @@ export default function ForumTab() {
     const currentVoteState = votingStates[questionId];
     if (currentVoteState?.isVoting) return;
 
+    // Ensure we have a valid voting state
+    const safeCurrentState = currentVoteState || {
+      isVoting: false,
+      isLiked: false,
+      totalLikes: 0,
+    };
+
     // Set voting state
     setVotingStates((prev) => ({
       ...prev,
       [questionId]: {
-        ...currentVoteState,
+        ...safeCurrentState,
         isVoting: true,
-        totalVotes: currentVoteState?.totalVotes || 0,
       },
     }));
 
     try {
-      const votes = await voteApi.getByQuestionId(questionId);
-      const userVote = votes.find(
-        (vote) => vote.customerProfileId === Number(user.customer_profile_id)
-      );
+      const response = await voteApi.getVoteByQuestionId(questionId);
+      let votes: any[] = [];
+      if (response && Array.isArray(response.data)) {
+        votes = response.data;
+      } else {
+        votes = [];
+      }
+      console.log("🔄 Votes fetched for question state 1", votes);
+      const userVote = votes.find((vote) => vote.userId === Number(user.id));
 
-      let newTotalVotes = currentVoteState?.totalVotes || 0;
-      let newUserVoteType: "UP" | "DOWN" | undefined;
+      let newTotalLikes = votes.filter((vote) => vote.voteType === "UP").length;
+      let newIsLiked: boolean;
       let newUserVoteId: number | undefined;
 
-      if (userVote) {
-        // User has already voted
-        if (userVote.voteType === voteType) {
-          // Same vote type - remove the vote
-          await voteApi.delete(userVote.id);
-          // Adjust total votes
-          newTotalVotes += userVote.voteType === "UP" ? -1 : 1;
-          newUserVoteType = undefined;
-          newUserVoteId = undefined;
-        } else {
-          // Different vote type - update the vote
-          const updatedVote = await voteApi.update(userVote.id, {
-            vote_type: voteType,
-          });
-          // Adjust total votes (remove old vote effect, add new vote effect)
-          newTotalVotes += userVote.voteType === "UP" ? -2 : 2;
-          newUserVoteType = voteType;
-          newUserVoteId = updatedVote.id;
-        }
-      } else {
-        // User hasn't voted yet - create new vote
-        const newVote = await voteApi.create({
-          vote_type: voteType,
-          question_id: questionId,
-        });
-        // Adjust total votes
-        newTotalVotes += voteType === "UP" ? 1 : -1;
-        newUserVoteType = voteType;
-        newUserVoteId = newVote.id;
-      }
+      console.log(
+        "🔄 Votes fetched for question state 2: checking type of userVote"
+      );
+      console.log("Fetch data:", userVote);
 
+      if (userVote && userVote.voteType === "UP") {
+        // User has already liked - remove the like
+        await voteApi.deleteVote(userVote.id);
+        newTotalLikes -= 1;
+        newIsLiked = false;
+        newUserVoteId = undefined;
+      } else {
+        if (userVote && userVote.voteType === "DOWN") {
+          // Delete existing DOWN vote and create new UP vote
+          await voteApi.deleteVote(userVote.id);
+          const newVote = await voteApi.createVote({
+            vote_type: "UP",
+            question_id: questionId,
+          });
+          newTotalLikes =
+            votes.filter((vote) => vote.voteType === "UP").length + 1;
+          newIsLiked = true;
+          newUserVoteId = newVote.data.id;
+        } else {
+          // Create new UP vote
+          const newVote = await voteApi.createVote({
+            vote_type: "UP",
+            question_id: questionId,
+            reply_id: undefined,
+          });
+          newTotalLikes += 1;
+          newIsLiked = true;
+          newUserVoteId = newVote.data.id;
+        }
+      }
+      console.log("🔄 Votes fetched for question state 3: newTotalLikes");
       // Update voting state with new values
       setVotingStates((prev) => ({
         ...prev,
         [questionId]: {
           isVoting: false,
-          userVote: newUserVoteType,
+          isLiked: newIsLiked,
           userVoteId: newUserVoteId,
-          totalVotes: newTotalVotes,
+          totalLikes: newTotalLikes,
         },
       }));
+
+      Toast.show({
+        type: "success",
+        text1: newIsLiked ? "Post Liked" : "Like Removed",
+        text2: newIsLiked ? "You liked this post" : "You removed your like",
+        position: "top",
+      });
     } catch (error) {
       console.error("Error voting:", error);
       Toast.show({
         type: "error",
-        text1: "Vote Failed",
-        text2: "Unable to register your vote",
+        text1: "Like Failed",
+        text2: "Unable to register your like. Please try again.",
         position: "top",
       });
 
@@ -208,9 +236,8 @@ export default function ForumTab() {
       setVotingStates((prev) => ({
         ...prev,
         [questionId]: {
-          ...currentVoteState,
+          ...safeCurrentState,
           isVoting: false,
-          totalVotes: currentVoteState?.totalVotes || 0,
         },
       }));
     }
@@ -616,50 +643,7 @@ export default function ForumTab() {
                   }}
                   className="flex-1 active:bg-pink-50"
                 >
-                  <View className="flex-row p-3">
-                    {/* Vote Section */}
-                    <View className="items-center mr-3 pt-1 w-10">
-                      <TouchableOpacity
-                        onPress={() => handleVote(question.id, "UP")}
-                        className={`p-1 rounded active:bg-pink-100 ${
-                          votingStates[question.id]?.userVote === "UP"
-                            ? "bg-pink-100"
-                            : ""
-                        }`}
-                      >
-                        <Text
-                          className={`text-base ${
-                            votingStates[question.id]?.userVote === "UP"
-                              ? "text-pink-400 font-bold"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          ▲
-                        </Text>
-                      </TouchableOpacity>
-                      <Text className="text-xs font-bold text-pink-600 my-1 text-center">
-                        {votingStates[question.id]?.totalVotes || 0}
-                      </Text>
-                      <TouchableOpacity
-                        onPress={() => handleVote(question.id, "DOWN")}
-                        className={`p-1 rounded active:bg-pink-100 ${
-                          votingStates[question.id]?.userVote === "DOWN"
-                            ? "bg-pink-100"
-                            : ""
-                        }`}
-                      >
-                        <Text
-                          className={`text-base ${
-                            votingStates[question.id]?.userVote === "DOWN"
-                              ? "text-pink-400 font-bold"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          ▼
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-
+                  <View className="flex-row px-6 py-4">
                     {/* Content Section */}
                     <View className="flex-1">
                       {/* Header with Owner Actions */}
@@ -673,7 +657,7 @@ export default function ForumTab() {
                             resizeMode="cover"
                           />
                           <Text className="text-xs text-gray-500">
-                            Posted by{" "}
+                            Posted by
                             {question.customerProfile?.name || "anonymous"}
                           </Text>
                           <Text className="text-xs text-gray-400 mx-1">•</Text>
@@ -758,28 +742,63 @@ export default function ForumTab() {
                         </View>
                       )}
 
-                      {/* Actions */}
-                      <Text className="flex-row items-center pt-2">
-                        <TouchableOpacity className="flex-row items-center mr-4 py-1 px-2 rounded active:bg-gray-100">
-                          <Text className="text-gray-400 text-base mr-1">
-                            💬
-                          </Text>
-                          <Text className="text-xs text-gray-500 font-medium">
-                            {question._count?.replies || 0}
-                          </Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity className="flex-row items-center justify-between mr-4 py-1 px-2 rounded active:bg-gray-100">
-                          <Text className="flex-row items-center">
+                      {/* Like, Share, Replies - One Line Section */}
+                      <View className="flex-row items-center justify-between py-2 border-t border-gray-100">
+                        <View className="flex-row items-center flex-1">
+                          <TouchableOpacity
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handleVote(question.id);
+                            }}
+                            className="flex-row items-center py-2 px-3 rounded-full active:bg-pink-50"
+                            disabled={votingStates[question.id]?.isVoting}
+                          >
+                            <Text
+                              className={`text-xl mr-2 ${
+                                votingStates[question.id]?.isVoting
+                                  ? "opacity-50"
+                                  : ""
+                              }`}
+                            >
+                              {votingStates[question.id]?.isLiked ? "❤️" : "🤍"}
+                            </Text>
+                            <Text className="text-sm font-medium text-gray-700">
+                              {votingStates[question.id]?.isVoting
+                                ? "..."
+                                : `${
+                                    votingStates[question.id]?.totalLikes || 0
+                                  } ${
+                                    (votingStates[question.id]?.totalLikes ||
+                                      0) === 1
+                                      ? "like"
+                                      : "likes"
+                                  }`}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              // Could add share functionality here later
+                            }}
+                            className="flex-row items-center py-2 px-3 rounded-full active:bg-gray-50 ml-2"
+                          >
                             <Text className="text-gray-400 text-base mr-1">
                               📤
                             </Text>
                             <Text className="text-xs text-gray-500 font-medium">
                               Share
                             </Text>
-                          </Text>
-                        </TouchableOpacity>
-                      </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity className="flex-row items-center py-2 px-3 rounded active:bg-gray-100 ml-2">
+                            <Text className="text-gray-400 text-base mr-1">
+                              💬
+                            </Text>
+                            <Text className="text-xs text-gray-500 font-medium">
+                              {question._count?.replies || 0} replies
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
                     </View>
                   </View>
                 </TouchableOpacity>

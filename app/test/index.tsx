@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { testPackageApi } from "@/apis";
 import { TestPackageItem } from "@/models/testPackage";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TestPackagesScreen() {
   const router = useRouter();
@@ -78,11 +78,6 @@ export default function TestPackagesScreen() {
   const handleViewDetails = (packageItem: TestPackageItem) => {
     router.push(`/test/package-details?packageId=${packageItem.id}`);
   };
-
-  const handleViewAllTests = () => {
-    router.push("/test/all-tests" as any);
-  };
-
   const handleBookNow = (packageItem: TestPackageItem) => {
     router.push(`/test/booking?packageId=${packageItem.id}`);
   };
@@ -104,14 +99,6 @@ export default function TestPackagesScreen() {
           <Text className="text-2xl font-bold text-pink-400">
             STI Testing Packages
           </Text>
-          <TouchableOpacity
-            onPress={handleViewAllTests}
-            className="bg-pink-100 px-4 py-2 rounded-full"
-          >
-            <Text className="text-pink-400 text-sm font-semibold">
-              View All Test
-            </Text>
-          </TouchableOpacity>
         </View>
         <Text className="text-pink-300 text-base">
           Choose the right package for your needs
