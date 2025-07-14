@@ -235,10 +235,7 @@ export const TestBookingForm: React.FC = () => {
             "⚠️ [TestBookingForm] Detected problematic payment domain:",
             urlDomain
           );
-          console.log("🎭 [TestBookingForm] Will use mock payment interface");
         }
-
-        console.log("🔄 [TestBookingForm] Navigating to payment webview...");
 
         const navigationParams = {
           pathname: "/payment/webview" as any,
@@ -250,7 +247,6 @@ export const TestBookingForm: React.FC = () => {
         );
 
         router.push(navigationParams);
-        console.log("✅ [TestBookingForm] Navigation completed");
       } else {
         console.error(
           "❌ [TestBookingForm] Payment URL not found in response:",

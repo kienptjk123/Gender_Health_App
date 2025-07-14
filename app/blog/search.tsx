@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -20,9 +20,30 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Normalize Unicode for Vietnamese text comparison
+  const normalizeString = useCallback((str: string) => {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  }, []);
+
+  // Debounce timer
+  const [debounceTimer, setDebounceTimer] = useState<number | null>(null);
+
   useEffect(() => {
     loadBlogs();
   }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
+  }, [debounceTimer]);
 
   const loadBlogs = async () => {
     try {
@@ -40,16 +61,51 @@ export default function SearchPage() {
     }
   };
 
+  // Debounced search function to prevent crash when typing Vietnamese quickly
+  const performSearch = useCallback(
+    (query: string) => {
+      // Prevent search if blogs not loaded yet
+      if (!allBlogs.length) return;
+
+      const normalizedQuery = normalizeString(query);
+
+      if (normalizedQuery === "") {
+        setSearchResults([]);
+      } else {
+        try {
+          const filtered = allBlogs.filter((blog) => {
+            const normalizedTitle = normalizeString(blog.title || "");
+            const normalizedContent = normalizeString(blog.content || "");
+
+            return (
+              normalizedTitle.includes(normalizedQuery) ||
+              normalizedContent.includes(normalizedQuery)
+            );
+          });
+          setSearchResults(filtered);
+        } catch (error) {
+          console.error("Error filtering blogs:", error);
+          setSearchResults([]);
+        }
+      }
+    },
+    [allBlogs, normalizeString]
+  );
+
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (query.trim() === "") {
-      setSearchResults([]);
-    } else {
-      const filtered = allBlogs.filter((blog) =>
-        blog.title.toLowerCase().includes(query.toLowerCase())
-      );
-      setSearchResults(filtered);
+
+    // Clear previous timer
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
     }
+
+    // Set new timer for debounced search
+    const timer = setTimeout(() => {
+      performSearch(query);
+    }, 300) as unknown as number;
+
+    setDebounceTimer(timer);
   };
 
   const getTimeAgo = (dateString: string) => {
@@ -67,7 +123,6 @@ export default function SearchPage() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#ffffff", paddingTop: 30 }}>
-      {/* Header */}
       <View className="bg-white px-6 pt-4 pb-6 shadow-sm">
         <View className="flex-row items-center mb-6">
           <TouchableOpacity

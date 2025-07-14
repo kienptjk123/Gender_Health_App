@@ -1,20 +1,29 @@
-import { AntDesign, Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   ActivityIndicator,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
+  InteractionManager,
 } from "react-native";
 import { testPackageApi } from "../../apis";
-import { TestDetail, TestPackageItem, TypeOfTest } from "../../models";
+import { TestPackageItem, TypeOfTest } from "../../models";
+import TestSection from "../../components/TestSection";
 
 export default function AllTestsPage() {
-  const nav = useNavigation();
-  console.log("Navigation object:", nav);
   const router = useRouter();
+  
+  // Debug router context
+  useEffect(() => {
+    console.log("=== Router Context Debug ===");
+    console.log("Router available:", !!router);
+    console.log("Router back function:", typeof router?.back);
+    console.log("Router push function:", typeof router?.push);
+  }, [router]);
+
   const [testPackages, setTestPackages] = useState<TestPackageItem[]>([]);
   const [typeOfTests, setTypeOfTests] = useState<TypeOfTest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,44 +31,63 @@ export default function AllTestsPage() {
     [key: string]: boolean;
   }>({});
 
-  const packages = [
-    {
-      name: "Basic",
-      colors: ["#2dd4bf", "#0891b2"],
-      badge: "AFFORDABLE",
-      badgeColor: "bg-teal-100 text-teal-800",
-    },
-    {
-      name: "Advanced",
-      colors: ["#fb923c", "#ea580c"],
-      badge: "RECOMMENDED",
-      badgeColor: "bg-orange-100 text-orange-800",
-    },
-    {
-      name: "Premium",
-      colors: ["#3b82f6", "#1d4ed8"],
-      badge: "POPULAR",
-      badgeColor: "bg-yellow-100 text-yellow-800",
-    },
-    {
-      name: "Pre-marital",
-      colors: ["#8b5cf6", "#6d28d9"],
-      badge: "COMPREHENSIVE",
-      badgeColor: "bg-purple-100 text-purple-800",
-    },
-  ];
+  // Debounce timer for toggle function
+  const [debounceTimer, setDebounceTimer] = useState<number | null>(null);
+
+  const packages = useMemo(
+    () => [
+      {
+        name: "Basic",
+        colors: ["#2dd4bf", "#0891b2"],
+        badge: "AFFORDABLE",
+        badgeColor: "bg-teal-100 text-teal-800",
+      },
+      {
+        name: "Advanced",
+        colors: ["#fb923c", "#ea580c"],
+        badge: "RECOMMENDED",
+        badgeColor: "bg-orange-100 text-orange-800",
+      },
+      {
+        name: "Premium",
+        colors: ["#3b82f6", "#1d4ed8"],
+        badge: "POPULAR",
+        badgeColor: "bg-yellow-100 text-yellow-800",
+      },
+      {
+        name: "Pre-marital",
+        colors: ["#8b5cf6", "#6d28d9"],
+        badge: "COMPREHENSIVE",
+        badgeColor: "bg-purple-100 text-purple-800",
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
+  }, [debounceTimer]);
+
   const fetchData = async () => {
     try {
+      console.log("=== Fetching Test Data ===");
       setLoading(true);
       const [packagesResponse, typesResponse] = await Promise.all([
         testPackageApi.getAllTestPackages(),
         testPackageApi.getTypeOfTests(),
       ]);
+
+      console.log("Packages response:", packagesResponse?.data?.length || 0);
+      console.log("Types response:", typesResponse?.data?.length || 0);
 
       setTestPackages(packagesResponse.data || []);
       setTypeOfTests(typesResponse.data || []);
@@ -69,42 +97,110 @@ export default function AllTestsPage() {
       typesResponse.data?.forEach((typeOfTest, index) => {
         initialExpanded[typeOfTest.name] = index === 0; // Expand first section only
       });
+      console.log("Initial expanded sections:", initialExpanded);
       setExpandedSections(initialExpanded);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
+      console.log("=== Data Fetch Complete ===");
       setLoading(false);
     }
   };
 
-  const getPackageColor = (packageName: string) => {
-    const pkg = packages.find(
-      (p) =>
-        packageName.toLowerCase().includes(p.name.toLowerCase()) ||
-        p.name.toLowerCase().includes(packageName.toLowerCase())
-    );
-    return pkg?.colors || packages[0].colors;
-  };
+  const getPackageColor = useCallback(
+    (packageName: string) => {
+      const pkg = packages.find(
+        (p) =>
+          packageName.toLowerCase().includes(p.name.toLowerCase()) ||
+          p.name.toLowerCase().includes(packageName.toLowerCase())
+      );
+      return pkg?.colors || packages[0].colors;
+    },
+    [packages]
+  );
 
-  const toggleSection = (sectionName: string) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [sectionName]: !prev[sectionName],
-    }));
-  };
+  // Memoized package-test mapping for performance
+  const testPackageMap = useMemo(() => {
+    const map: Record<number, Set<number>> = {};
+    testPackages.forEach((pkg) => {
+      map[pkg.id] = new Set(pkg.tests.map((test) => test.id));
+    });
+    return map;
+  }, [testPackages]);
 
-  const isTestInPackage = (
-    testId: number,
-    packageItem: TestPackageItem
-  ): boolean => {
-    return packageItem.tests.some((test) => test.id === testId);
-  };
+  // Memoized package colors mapping
+  const packageColorMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    testPackages.forEach((pkg) => {
+      const color = getPackageColor(pkg.name)[0];
+      map[pkg.id] = color;
+    });
+    return map;
+  }, [testPackages, getPackageColor]);
+
+  const toggleSection = useCallback((sectionName: string) => {
+    console.log("=== Toggle Section Debug ===");
+    console.log("Toggling section:", sectionName);
+    console.log("Available typeOfTests:", typeOfTests?.length || 0);
+    console.log("Available testPackages:", testPackages?.length || 0);
+    console.log("Current expanded sections:", expandedSections);
+    console.log("Router available:", !!router);
+    
+    // Prevent toggle if data not ready
+    if (!typeOfTests.length || !testPackages.length) {
+      console.warn("Data not ready, skipping toggle");
+      return;
+    }
+
+    // Clear previous debounce timer
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    // Debounce the toggle operation
+    const timer = setTimeout(() => {
+      try {
+        // Use InteractionManager to prevent UI blocking
+        InteractionManager.runAfterInteractions(() => {
+          console.log("Executing toggle for:", sectionName);
+          setExpandedSections((prev) => {
+            const newState = {
+              ...prev,
+              [sectionName]: !prev[sectionName],
+            };
+            console.log("New expanded state:", newState);
+            return newState;
+          });
+        });
+      } catch (error) {
+        console.error("Toggle section error:", error);
+      }
+    }, 100) as unknown as number; // 100ms debounce
+
+    setDebounceTimer(timer);
+  }, [typeOfTests, testPackages, expandedSections, router, debounceTimer]);
 
   if (loading) {
     return (
       <View className="flex-1 bg-gray-50 justify-center items-center">
         <ActivityIndicator size="large" color="#3b82f6" />
         <Text className="mt-4 text-gray-600">Loading all tests...</Text>
+      </View>
+    );
+  }
+
+  // Prevent render if data not loaded yet
+  if (!testPackages.length || !typeOfTests.length) {
+    return (
+      <View className="flex-1 bg-pink-50 justify-center items-center">
+        <View className="bg-white p-8 rounded-3xl shadow-sm">
+          <Text className="text-pink-400 text-lg font-semibold text-center">
+            No test data available
+          </Text>
+          <Text className="text-pink-300 text-sm text-center mt-2">
+            Please check your connection and try again
+          </Text>
+        </View>
       </View>
     );
   }
@@ -116,7 +212,15 @@ export default function AllTestsPage() {
         <View className="px-6">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => {
+                console.log("=== Back Button Pressed ===");
+                console.log("Router available:", !!router);
+                try {
+                  router.back();
+                } catch (error) {
+                  console.error("Back navigation error:", error);
+                }
+              }}
               className="w-10 h-10 rounded-full bg-pink-100 justify-center items-center shadow-md"
             >
               <Ionicons name="arrow-back" size={24} color="#EC4899" />
@@ -152,82 +256,15 @@ export default function AllTestsPage() {
         {/* Test Categories */}
         <View className="px-6 space-y-4 flex flex-col gap-2">
           {typeOfTests.map((typeOfTest) => (
-            <View
+            <TestSection
               key={typeOfTest.id}
-              className="bg-white rounded-xl shadow-sm overflow-hidden"
-            >
-              {/* Category Header */}
-              <TouchableOpacity
-                onPress={() => toggleSection(typeOfTest.name)}
-                className="w-full px-6 py-4 bg-pink-400 flex-row items-center justify-between"
-              >
-                <View className="flex-1">
-                  <Text className="text-white font-bold text-lg">
-                    {typeOfTest.name}
-                  </Text>
-                  <Text className="text-pink-100 text-sm">
-                    ({typeOfTest.tests?.length || 0} tests)
-                  </Text>
-                </View>
-                <Text
-                  className={`text-white text-xl transform transition-transform ${
-                    expandedSections[typeOfTest.name] ? "rotate-180" : ""
-                  }`}
-                >
-                  <AntDesign name="arrowdown" size={24} color="#fff" />
-                </Text>
-              </TouchableOpacity>
-
-              {expandedSections[typeOfTest.name] && typeOfTest.tests && (
-                <View className="divide-y divide-gray-100">
-                  {typeOfTest.tests.map((test: TestDetail) => (
-                    <View key={test.id} className="p-4">
-                      <View className="flex-row items-start justify-between mb-3">
-                        <View className="flex-1">
-                          <Text className="font-semibold text-pink-400">
-                            {test.name}
-                          </Text>
-                          <Text className="text-pink-300 text-sm mt-1 leading-relaxed">
-                            {test.description}
-                          </Text>
-                        </View>
-                      </View>
-
-                      {/* Package Indicators */}
-                      <View className="flex-row items-center gap-2 mt-3">
-                        <Text className="text-xs text-pink-300 font-medium">
-                          Available in:
-                        </Text>
-                        <View className="flex-row gap-1">
-                          {testPackages.map((pkg) => {
-                            const pkgColors = getPackageColor(pkg.name);
-                            return (
-                              <View
-                                key={pkg.id}
-                                className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                  isTestInPackage(test.id, pkg)
-                                    ? ""
-                                    : "bg-gray-200"
-                                }`}
-                                style={
-                                  isTestInPackage(test.id, pkg)
-                                    ? { backgroundColor: pkgColors[0] }
-                                    : {}
-                                }
-                              >
-                                {isTestInPackage(test.id, pkg) && (
-                                  <Text className="text-white text-xs">✓</Text>
-                                )}
-                              </View>
-                            );
-                          })}
-                        </View>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
+              typeOfTest={typeOfTest}
+              isExpanded={expandedSections[typeOfTest.name] || false}
+              onToggle={() => toggleSection(typeOfTest.name)}
+              testPackages={testPackages}
+              testPackageMap={testPackageMap}
+              packageColorMap={packageColorMap}
+            />
           ))}
         </View>
 

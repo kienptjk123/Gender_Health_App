@@ -108,7 +108,6 @@ export default function Register() {
         visibilityTime: 3000,
       });
 
-      // Navigate to mobile OTP verification page
       setTimeout(() => {
         try {
           router.push({
@@ -118,12 +117,7 @@ export default function Register() {
               type: "registration",
             },
           });
-          console.log("✅ Navigation to mobile OTP verification completed");
         } catch (navigationError) {
-          console.error(
-            "⚠️ Navigation method 1 failed, trying alternative:",
-            navigationError
-          );
           router.push(
             `/auth/verify-mobile-otp?email=${encodeURIComponent(
               data.email

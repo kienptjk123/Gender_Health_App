@@ -103,7 +103,7 @@ export default function BlogTab() {
             <Bookmark size={20} color="#f472b6" />
           </TouchableOpacity>
           <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-pink-900/80 via-pink-800/60 to-transparent p-6">
-            <Text className="text-white text-xl font-bold mb-3 leading-tight shadow-lg">
+            <Text className="text-pink-400 text-xl font-bold mb-3 leading-tight shadow-lg">
               {item.title}
             </Text>
             <View className="flex-row items-center">
@@ -113,10 +113,10 @@ export default function BlogTab() {
                 resizeMode="cover"
               />
               <View>
-                <Text className="text-white font-medium shadow-sm">
+                <Text className="text-pink-400 font-medium shadow-sm">
                   {item.staff?.name}
                 </Text>
-                <Text className="text-white/80 text-sm">
+                <Text className="text-pink-400 text-sm">
                   {getTimeAgo(item.date)}
                 </Text>
               </View>
