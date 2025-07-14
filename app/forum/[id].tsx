@@ -1,20 +1,20 @@
-import React, {
+import { questionApi, replyApi, voteApi } from "@/apis/forum";
+import { SafeArea } from "@/components/SafeArea";
+import { useAuth } from "@/contexts/AuthContext";
+import { QuestionData, ReplyData } from "@/models/forum";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
-  RefreshControl,
-  Image,
-  TextInput,
 } from "react-native";
-import { useState, useEffect, useCallback } from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { questionApi, voteApi, replyApi } from "@/apis/forum";
-import { QuestionData, ReplyData } from "@/models/forum";
-import { useAuth } from "@/contexts/AuthContext";
 import Toast from "react-native-toast-message";
-import { SafeArea } from "@/components/SafeArea";
 
 export default function QuestionDetailPage() {
   const { id } = useLocalSearchParams();

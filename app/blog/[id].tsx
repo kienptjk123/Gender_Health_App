@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Image,
-  ActivityIndicator,
-  TouchableOpacity,
-  StatusBar,
-} from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { blogApi } from "../../apis/blog";
+import { SafeArea } from "@/components/SafeArea";
 import { BlogPost } from "@/models/blog";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeArea } from "@/components/SafeArea";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { blogApi } from "../../apis/blog";
 
 function getContentText(content: string): string {
   try {
