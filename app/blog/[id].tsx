@@ -153,9 +153,6 @@ export default function BlogDetail() {
     );
   }
 
-  console.log("✅ Rendering blog:", blog.title);
-
-  // Main blog content
   return (
     <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
       <StatusBar
