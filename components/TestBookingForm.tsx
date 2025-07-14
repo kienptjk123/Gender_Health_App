@@ -5,10 +5,10 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
@@ -16,6 +16,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import Toast from "react-native-toast-message";
 import dayjs from "dayjs";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { SafeArea } from "./SafeArea";
 
 import { testPackageApi, orderApi, paymentApi } from "../apis";
 import { useAuth } from "../contexts/AuthContext";
@@ -160,7 +162,7 @@ export const TestBookingForm: React.FC = () => {
       return;
     }
 
-    const phonePattern = /^(03|05|07|08|09)\d{8}$/;
+    const phonePattern = /^0\d{9}$/;
     if (!phonePattern.test(data.phone)) {
       console.error("❌ [TestBookingForm] Invalid phone number:", {
         phone: data.phone,
@@ -169,7 +171,7 @@ export const TestBookingForm: React.FC = () => {
       Toast.show({
         type: "error",
         text1: "Invalid phone number",
-        text2: "Phone must be 10 digits and start with 03, 05, 07, 08, or 09",
+        text2: "Phone must be 10 digits and start with 0",
       });
       return;
     }
@@ -281,10 +283,27 @@ export const TestBookingForm: React.FC = () => {
   if (loading) {
     console.log("⏳ [TestBookingForm] Rendering loading state");
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#f472b6" />
-        <Text className="mt-4 text-gray-600">Loading test package...</Text>
-      </SafeAreaView>
+      <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
+        <LinearGradient colors={["#FFCBD7", "#F8BBD9"]} className="flex-1">
+          {/* Background Image */}
+          <View className="absolute inset-0">
+            <Image
+              source={require("@/assets/images/7.png")}
+              className="w-full h-full opacity-30"
+              resizeMode="cover"
+            />
+          </View>
+
+          <View className="flex-1 items-center justify-center">
+            <View className="bg-white/95 rounded-3xl px-8 py-8 shadow-2xl">
+              <ActivityIndicator size="large" color="#f472b6" />
+              <Text className="mt-4 text-gray-600 text-center">
+                Loading test package...
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
+      </SafeArea>
     );
   }
 
@@ -299,18 +318,37 @@ export const TestBookingForm: React.FC = () => {
       packageId,
     });
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-red-500 text-lg">Test package not found</Text>
-        <TouchableOpacity
-          className="mt-4 bg-blue-500 px-6 py-3 rounded-lg"
-          onPress={() => {
-            console.log("🔙 [TestBookingForm] Going back...");
-            router.back();
-          }}
-        >
-          <Text className="text-white font-semibold">Go Back</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
+      <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
+        <LinearGradient colors={["#FFCBD7", "#F8BBD9"]} className="flex-1">
+          {/* Background Image */}
+          <View className="absolute inset-0">
+            <Image
+              source={require("@/assets/images/7.png")}
+              className="w-full h-full opacity-30"
+              resizeMode="cover"
+            />
+          </View>
+
+          <View className="flex-1 items-center justify-center px-6">
+            <View className="bg-white/95 rounded-3xl px-8 py-8 shadow-2xl">
+              <Text className="text-red-500 text-lg text-center mb-4">
+                Test package not found
+              </Text>
+              <TouchableOpacity
+                className="bg-[#f9a8d4] px-6 py-3 rounded-2xl"
+                onPress={() => {
+                  console.log("🔙 [TestBookingForm] Going back...");
+                  router.back();
+                }}
+              >
+                <Text className="text-white font-semibold text-center">
+                  Go Back
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </LinearGradient>
+      </SafeArea>
     );
   }
 
@@ -323,205 +361,253 @@ export const TestBookingForm: React.FC = () => {
   });
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 24,
-          }}
-          keyboardShouldPersistTaps="handled"
+    <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
+      <LinearGradient colors={["#FFCBD7", "#F8BBD9"]} className="flex-1">
+        {/* Background Image */}
+        <View className="absolute inset-0">
+          <Image
+            source={require("@/assets/images/7.png")}
+            className="w-full h-full opacity-30"
+            resizeMode="cover"
+          />
+        </View>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
         >
-          <View className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
-            {/* Header */}
-            <View className="mb-6">
-              <Text className="text-2xl font-extrabold text-center text-pink-600 mb-2">
-                Book Test Package
-              </Text>
-              <Text className="text-lg font-semibold text-center text-gray-800">
-                {packageName}
-              </Text>
-              <Text className="text-2xl font-bold text-center text-pink-500 mt-2">
-                ${price}
-              </Text>
-            </View>
-
-            {/* Phone */}
-            <View className="mb-4">
-              <Text className="text-base font-medium text-gray-700 mb-1">
-                Phone Number *
-              </Text>
-              <Controller
-                control={control}
-                name="phone"
-                rules={{
-                  required: "Phone number is required",
-                  pattern: {
-                    value: /^(03|05|07|08|09)\d{8}$/,
-                    message: "Invalid phone number format",
-                  },
-                }}
-                render={({
-                  field: { onChange, onBlur, value },
-                  fieldState: { error },
-                }) => (
-                  <>
-                    <TextInput
-                      className={`border px-4 py-3 text-base rounded-xl ${
-                        error ? "border-red-500" : "border-gray-300"
-                      }`}
-                      keyboardType="phone-pad"
-                      placeholder="Enter your phone number"
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      value={value}
-                    />
-                    {error && (
-                      <Text className="text-sm text-red-500 mt-1">
-                        {error.message}
-                      </Text>
-                    )}
-                  </>
-                )}
-              />
-            </View>
-
-            {/* Address */}
-            <View className="mb-4">
-              <Text className="text-base font-medium text-gray-700 mb-1">
-                Address *
-              </Text>
-              <Controller
-                control={control}
-                name="address"
-                rules={{ required: "Address is required" }}
-                render={({
-                  field: { onChange, onBlur, value },
-                  fieldState: { error },
-                }) => (
-                  <>
-                    <TextInput
-                      className={`border px-4 py-3 text-base rounded-xl ${
-                        error ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="Enter your address"
-                      multiline
-                      numberOfLines={2}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      value={value}
-                    />
-                    {error && (
-                      <Text className="text-sm text-red-500 mt-1">
-                        {error.message}
-                      </Text>
-                    )}
-                  </>
-                )}
-              />
-            </View>
-
-            {/* Test Date */}
-            <View className="mb-4">
-              <Text className="text-base font-medium text-gray-700 mb-1">
-                Test Date *
-              </Text>
-              <TouchableOpacity
-                onPress={() => setShowDatePicker(true)}
-                className="border border-gray-300 rounded-xl px-4 py-3 flex-row items-center justify-between"
-              >
-                <Text className="text-base text-gray-600">
-                  {testDate
-                    ? dayjs(testDate).format("DD/MM/YYYY")
-                    : "Select test date"}
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 24,
+            }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="w-full max-w-md bg-white/95 rounded-3xl shadow-2xl p-6">
+              {/* Header */}
+              <View className="mb-6">
+                <Text className="text-2xl font-bold text-center text-gray-800 mb-2">
+                  Book Test Package
                 </Text>
-                <Ionicons name="calendar-outline" size={20} color="#888" />
-              </TouchableOpacity>
-              {showDatePicker && (
-                <DateTimePicker
-                  mode="date"
-                  value={testDate || new Date()}
-                  minimumDate={new Date(new Date().setHours(0, 0, 0, 0))}
-                  onChange={(_, date) => {
-                    setShowDatePicker(false);
-                    if (date) {
-                      setValue("test_date", date);
-                    }
-                  }}
-                />
-              )}
-            </View>
+                <Text className="text-lg font-semibold text-center text-pink-600">
+                  {packageName}
+                </Text>
+                <Text className="text-2xl font-bold text-center text-pink-500 mt-2">
+                  ${price}
+                </Text>
+              </View>
 
-            {/* Note */}
-            <View className="mb-6">
-              <Text className="text-base font-medium text-gray-700 mb-1">
-                Additional Notes
-              </Text>
-              <Controller
-                control={control}
-                name="note"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    value={value}
-                    multiline
-                    numberOfLines={4}
-                    className="border border-gray-300 rounded-xl px-4 py-3 text-base"
-                    placeholder="Add any additional notes..."
+              {/* Phone */}
+              <View className="mb-4">
+                <Text className="text-sm font-semibold text-gray-700 mb-1">
+                  Phone Number *
+                </Text>
+                <Controller
+                  control={control}
+                  name="phone"
+                  rules={{
+                    required: "Phone number is required",
+                    pattern: {
+                      value: /^0\d{9}$/,
+                      message: "Phone must be 10 digits and start with 0",
+                    },
+                  }}
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <>
+                      <View className="relative">
+                        <View className="absolute left-4 top-4 z-10">
+                          <Ionicons
+                            name="call-outline"
+                            size={20}
+                            color="#F8BBD9"
+                          />
+                        </View>
+                        <TextInput
+                          className={`border-2 rounded-2xl pl-12 pr-4 py-4 text-sm bg-gray-50 ${
+                            error ? "border-red-300" : "border-pink-200"
+                          }`}
+                          keyboardType="phone-pad"
+                          placeholder="Enter your phone number"
+                          placeholderTextColor="#9CA3AF"
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          value={value}
+                        />
+                      </View>
+                      {error && (
+                        <Text className="text-red-500 text-sm mt-1 ml-2">
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </View>
+
+              {/* Address */}
+              <View className="mb-4">
+                <Text className="text-sm font-semibold text-gray-700 mb-1">
+                  Address *
+                </Text>
+                <Controller
+                  control={control}
+                  name="address"
+                  rules={{ required: "Address is required" }}
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <>
+                      <View className="relative">
+                        <View className="absolute left-4 top-4 z-10">
+                          <Ionicons
+                            name="location-outline"
+                            size={20}
+                            color="#F8BBD9"
+                          />
+                        </View>
+                        <TextInput
+                          className={`border-2 rounded-2xl pl-12 pr-4 py-4 text-sm bg-gray-50 ${
+                            error ? "border-red-300" : "border-pink-200"
+                          }`}
+                          placeholder="Enter your address"
+                          placeholderTextColor="#9CA3AF"
+                          multiline
+                          numberOfLines={2}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          value={value}
+                        />
+                      </View>
+                      {error && (
+                        <Text className="text-red-500 text-sm mt-1 ml-2">
+                          {error.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </View>
+
+              {/* Test Date */}
+              <View className="mb-4">
+                <Text className="text-sm font-semibold text-gray-700 mb-1">
+                  Test Date *
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  className="border-2 border-pink-200 rounded-2xl px-4 py-4 flex-row items-center justify-between bg-gray-50"
+                >
+                  <View className="flex-row items-center">
+                    <Ionicons
+                      name="calendar-outline"
+                      size={20}
+                      color="#F8BBD9"
+                    />
+                    <Text className="text-sm text-gray-600 ml-3">
+                      {testDate
+                        ? dayjs(testDate).format("DD/MM/YYYY")
+                        : "Select test date"}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    mode="date"
+                    value={testDate || new Date()}
+                    minimumDate={new Date(new Date().setHours(0, 0, 0, 0))}
+                    onChange={(_, date) => {
+                      setShowDatePicker(false);
+                      if (date) {
+                        setValue("test_date", date);
+                      }
+                    }}
                   />
                 )}
-              />
-            </View>
+              </View>
 
-            {/* Submit Button */}
-            <TouchableOpacity
-              className={`rounded-xl py-4 ${
-                submitting ? "bg-pink-300" : "bg-pink-500"
-              }`}
-              onPress={() => {
-                console.log("🖱️ [TestBookingForm] Submit button pressed");
-                console.log("📝 [TestBookingForm] Form state at submit:", {
-                  submitting,
-                  customerProfileId: user?.customer_profile_id,
-                  packageName,
-                  price,
-                });
-                handleSubmit(onSubmit)();
-              }}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <View className="flex-row items-center justify-center">
-                  <ActivityIndicator size="small" color="white" />
-                  <Text className="text-white font-bold text-lg ml-2">
-                    Booking...
-                  </Text>
-                </View>
-              ) : (
-                <Text className="text-white font-bold text-center text-lg">
-                  Book Now
+              {/* Note */}
+              <View className="mb-6">
+                <Text className="text-sm font-semibold text-gray-700 mb-1">
+                  Additional Notes
                 </Text>
-              )}
-            </TouchableOpacity>
+                <Controller
+                  control={control}
+                  name="note"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View className="relative">
+                      <View className="absolute left-4 top-4 z-10">
+                        <Ionicons
+                          name="document-text-outline"
+                          size={20}
+                          color="#F8BBD9"
+                        />
+                      </View>
+                      <TextInput
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        value={value}
+                        multiline
+                        numberOfLines={3}
+                        className="border-2 border-pink-200 rounded-2xl pl-12 pr-4 py-4 text-sm bg-gray-50"
+                        placeholder="Add any additional notes..."
+                        placeholderTextColor="#9CA3AF"
+                      />
+                    </View>
+                  )}
+                />
+              </View>
 
-            {/* Back Button */}
-            <TouchableOpacity
-              className="mt-4 py-3"
-              onPress={() => router.back()}
-            >
-              <Text className="text-pink-500 font-semibold text-center">
-                Cancel
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              {/* Submit Button */}
+              <TouchableOpacity
+                className={`rounded-2xl py-4 mb-3 ${
+                  submitting ? "bg-pink-300" : "bg-[#f9a8d4]"
+                }`}
+                onPress={() => {
+                  console.log("🖱️ [TestBookingForm] Submit button pressed");
+                  console.log("📝 [TestBookingForm] Form state at submit:", {
+                    submitting,
+                    customerProfileId: user?.customer_profile_id,
+                    packageName,
+                    price,
+                  });
+                  handleSubmit(onSubmit)();
+                }}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <View className="flex-row items-center justify-center">
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white font-bold text-lg ml-3">
+                      Booking...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="text-white font-bold text-center text-lg">
+                    Book Now
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Back Button */}
+              <TouchableOpacity
+                className="border-2 border-pink-200 py-3 rounded-2xl bg-white/50"
+                onPress={() => router.back()}
+              >
+                <Text className="text-gray-700 font-semibold text-center">
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </SafeArea>
   );
 };

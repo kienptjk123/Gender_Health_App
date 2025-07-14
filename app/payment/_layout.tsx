@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 
 export default function PaymentLayout() {
   return (
-    <Stack>
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="webview"
         options={{
