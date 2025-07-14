@@ -5,9 +5,8 @@ import NotificationIcon from "@/components/NotificationIcon";
 import UpcomingAppointmentSection from "@/components/UpcomingAppointmentSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, Text, View } from "react-native";
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -40,15 +39,25 @@ export default function HomeScreen() {
       className="flex-1 bg-white"
       showsVerticalScrollIndicator={false}
     >
-      <LinearGradient
-        colors={["#f2d9fa", "#e8b1fa", "#ffffff"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="pt-15"
+      <View
+        className="rounded-b-3xl overflow-hidden pb-12"
+        style={{ position: "relative" }}
       >
-        {/* Header */}
-        <View className="flex-row justify-between items-center px-5 mt-5">
-          <View className="w-12 h-12 rounded-full overflow-hidden">
+        <Image
+          source={require("../../assets/images/pink.jpg")}
+          resizeMode="cover"
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            opacity: 1,
+            borderBottomLeftRadius: 24,
+            borderBottomRightRadius: 24,
+          }}
+        />
+        {/* Top Row: Avatar and Notification */}
+        <View className="flex-row justify-between items-center px-5 pt-10">
+          <View className="w-12 h-12 rounded-full overflow-hidden border-2 border-white">
             <Image
               source={{
                 uri:
@@ -58,43 +67,43 @@ export default function HomeScreen() {
               className="w-full h-full"
             />
           </View>
-          <NotificationIcon unreadCount={unreadCount} />
-        </View>
-
-        <View className="flex-row items-center justify-between px-5">
-          <View className="flex-1 mr-4">
-            <Text className="text-3xl font-bold text-gray-800 mb-1">
-              Welcome!
-            </Text>
-            <Text className="text-3xl font-bold text-gray-800 mb-2">
-              {user?.name}
-            </Text>
-            <Text className="text-base text-gray-500 mb-3">
-              Have a nice day 😊
-            </Text>
-            <TouchableOpacity className="bg-red-500 py-3 px-5 rounded-full flex-row items-center shadow-lg self-start">
-              <Text className="text-base mr-2">🚨</Text>
-              <Text className="text-white text-base font-semibold">
-                Urgent Care
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <Image
-            source={require("../../assets/images/nurse.png")}
-            style={{ width: 200, height: 300, borderRadius: 16 }}
+          <NotificationIcon
+            unreadCount={unreadCount}
+            className="w-11 h-11 rounded-full bg-white justify-center items-center shadow-sm"
           />
         </View>
-      </LinearGradient>
+        {/* Welcome Card Overlay */}
+        <View
+          className="mx-5 mt-6 bg-white rounded-2xl p-6 -mb-8 z-10"
+          style={{
+            shadowColor: "#F9A8D4", // or '#000' for a neutral shadow
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.25,
+            shadowRadius: 16,
+            elevation: 16, // for Android
+          }}
+        >
+          <Text className="text-center text-gray-500 text-base font-medium mb-1">
+            WELCOME BACK!
+          </Text>
+          <Text className="text-center text-2xl font-bold text-gray-900 mb-2">
+            {user?.name || "User"}
+          </Text>
+          <Text className="text-center text-gray-500 mb-4">
+            Unlock your health journey today!
+          </Text>
+        </View>
+      </View>
 
       {/* Health Services Section */}
-      <View className="px-5 pt-8">
+      <View className="px-5 pb-4 pt-4">
         <HealthServicesSwiper />
       </View>
-      <View className="p-4">
+      <View className="pb-24">
         {customerProfile?.id ? (
           <>
-            <ConsultantList customerProfileId={customerProfile.id} />
             <UpcomingAppointmentSection customerId={customerProfile.id} />
+            <ConsultantList customerProfileId={customerProfile.id} />
           </>
         ) : (
           <Text className="text-center text-gray-500 mt-4">Loading...</Text>
