@@ -14,6 +14,7 @@ import "../global.css";
 import AuthGuard from "@/components/AuthGuard";
 import { SafeProvider } from "@/components/SafeArea";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ChatbotProvider } from "@/contexts/ChatbotContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function RootLayout() {
@@ -30,36 +31,47 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <SafeProvider>
         <AuthProvider>
-          <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-          >
-            <AuthGuard>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="auth" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="onboarding"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="home" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="tracking"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="calendar"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="blog" options={{ headerShown: false }} />
-                <Stack.Screen name="forum" options={{ headerShown: false }} />
-                <Stack.Screen name="profile" options={{ headerShown: false }} />
-                <Stack.Screen name="test" options={{ headerShown: false }} />
-                <Stack.Screen name="payment" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              </Stack>
-            </AuthGuard>
-            <StatusBar style="auto" />
-          </ThemeProvider>
+          <ChatbotProvider>
+            <ThemeProvider
+              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+            >
+              <AuthGuard>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen name="auth" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="onboarding"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="home" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="tracking"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="calendar"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="blog" options={{ headerShown: false }} />
+                  <Stack.Screen name="forum" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="profile"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="test" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="payment"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                  />
+                </Stack>
+              </AuthGuard>
+              <StatusBar style="auto" />
+            </ThemeProvider>
+          </ChatbotProvider>
         </AuthProvider>
       </SafeProvider>
       <Toast />

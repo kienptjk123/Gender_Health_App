@@ -4,6 +4,7 @@ import StisTrackingSection from "@/components/StisTrackingSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { Data } from "@/models/STI/sti.type";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -65,17 +66,35 @@ export default function STITrackingScreen() {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white shadow-sm">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
-        >
-          <Ionicons name="chevron-back" size={24} color="#374151" />
-        </TouchableOpacity>
-        <Text className="text-lg font-semibold text-gray-800">
-          STI Tracking
-        </Text>
-        <View className="w-10" />
+      <View className="relative h-24">
+        <LinearGradient
+          colors={["#ec4899", "#f472b6"]}
+          className="w-full h-full"
+        />
+        <LinearGradient
+          colors={[
+            "transparent",
+            "rgba(236, 72, 153, 0.3)",
+            "rgba(244, 114, 182, 0.7)",
+          ]}
+          className="absolute inset-0"
+        />
+
+        {/* Header with back button overlay */}
+        <View className="absolute top-6 left-0 right-0 flex-row justify-between items-center px-4">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 rounded-full bg-white/90 justify-center items-center shadow-md"
+          >
+            <Ionicons name="arrow-back" size={24} color="#EC4899" />
+          </TouchableOpacity>
+          <Text className="text-2xl font-bold text-white text-center">
+            STI Tracking
+          </Text>
+          <TouchableOpacity className="w-10 h-10 rounded-full bg-white/90 justify-center items-center shadow-md">
+            <Ionicons name="bookmark-outline" size={24} color="#EC4899" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Content */}

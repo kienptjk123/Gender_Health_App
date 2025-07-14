@@ -101,6 +101,13 @@ export default function BottomTabs() {
       isActive: pathname.includes("/menstrualCycle"),
     },
     {
+      name: "Chatbot",
+      iconName: "chatbubbles",
+      iconFamily: "Ionicons" as const,
+      route: "/(tabs)/chatbot",
+      isActive: pathname.includes("/chatbot"),
+    },
+    {
       name: "Blog",
       iconName: "library",
       iconFamily: "Ionicons" as const,
