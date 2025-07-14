@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
-import { bookConsultApi } from "@/apis/bookConsult.api";
+import { bookConsultApi } from "@/apis/bookConsult";
 import { Ionicons } from "@expo/vector-icons";
 import ConsultantCard from "./ConsultantCard";
 

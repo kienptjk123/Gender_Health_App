@@ -1,7 +1,7 @@
 import { authService } from "@/apis";
-import { appointmentApi } from "@/apis/appointment.api";
+import { appointmentApi } from "@/apis/appointment";
 import { SafeAreaView } from "@/components/SafeArea";
-import { Appointment } from "@/models/appointment.type";
+import { Appointment } from "@/models/appointment";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";

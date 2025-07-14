@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { authService } from "@/apis/auth";
-import { bookConsultApi } from "@/apis/bookConsult.api";
+import { bookConsultApi } from "@/apis/bookConsult";
 import ConsultantCard from "@/components/ConsultantCard";
 import { Consultant } from "@/models/BookingConsultant/bookingConsult.type";
 
