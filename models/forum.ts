@@ -56,8 +56,9 @@ export interface ReplyData {
 
 export interface ReplyRequest {
   content: string;
-  questionId: number;
-  parentId?: number;
+  question_id: number;
+  author_type?: "CUSTOMER" | "ADMIN"; // Added to match API
+  parent_id?: number;
 }
 
 export interface VoteData {

@@ -53,7 +53,7 @@ const healthServices: HealthService[] = [
   },
   {
     id: "3",
-    title: "Find\nDoctors",
+    title: "Find\nConsultant",
     icon: "people",
     iconColor: "#FFFFFF",
     backgroundColor: "#06B6D4",

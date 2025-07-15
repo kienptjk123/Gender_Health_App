@@ -17,6 +17,13 @@ export default function UpcomingAppointmentSection({
   useEffect(() => {
     appointmentApi.getAppointmentsByCustomerId(customerId).then((data) => {
       const upcoming = data.find((item) => item.status === "WAITING_FOR_START");
+      if (upcoming?.endedAt) {
+        if (
+          new Date(upcoming.endedAt) < new Date(Date.now() + 7 * 60 * 60 * 1000)
+        ) {
+          return;
+        }
+      }
       setAppointment(upcoming || null);
     });
   }, [customerId]);
