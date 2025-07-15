@@ -6,6 +6,7 @@ import { Appointment } from "@/models/appointment";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { router } from "expo-router";
 
 export default function UpcomingAppointmentSection({
   customerId,
@@ -36,8 +37,15 @@ export default function UpcomingAppointmentSection({
       <View className="flex-row justify-between items-center mb-5">
         <Text className="text-2xl font-bold text-gray-800">My Appointment</Text>
         {/* See All button (no handler yet) */}
-        <TouchableOpacity>
-          <Text className="text-blue-600 text-base font-semibold">See All</Text>
+        <TouchableOpacity
+          onPress={() => router.push("/appoinmentHistory" as any)}
+          className="flex-row items-center bg-pink-100 px-3 py-2 rounded-full"
+          activeOpacity={0.7}
+        >
+          <Text className="text-pink-600 font-semibold text-sm mr-1">
+            See All
+          </Text>
+          <Ionicons name="arrow-forward" size={14} color="#ec4899" />
         </TouchableOpacity>
       </View>
 
