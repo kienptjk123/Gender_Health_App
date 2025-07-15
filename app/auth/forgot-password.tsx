@@ -41,16 +41,9 @@ export default function ForgotPassword() {
 
     try {
       setLoading(true);
-      console.log("🔄 Sending OTP for email:", data.email.trim());
-
       const response = await authService.forgotPassword({
         email: data.email.trim(),
       });
-
-      console.log("✅ Forgot password response:", response);
-      console.log("📊 Response type:", typeof response);
-      console.log("🎯 Response success:", response.success);
-      console.log("💬 Response message:", response.message);
 
       Toast.show({
         type: "success",
@@ -78,20 +71,15 @@ export default function ForgotPassword() {
         }
       }, 1000);
     } catch (error: any) {
-      console.error("❌ Forgot password error:", error);
-      console.error("📊 Error type:", typeof error);
-      console.error("🔍 Error details:", JSON.stringify(error, null, 2));
-
       let errorMessage = "Failed to send OTP. Please try again.";
       let errorTitle = "Failed to Send OTP";
 
-      // Handle different error types
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
-        console.log("📝 Using API error message:", errorMessage);
+        console.log("Using API error message:", errorMessage);
       } else if (error?.message) {
         errorMessage = error.message;
-        console.log("📝 Using error message:", errorMessage);
+        console.log("Using error message:", errorMessage);
       } else if (error?.statusCode === 404) {
         errorMessage = "No account found with this email address.";
         errorTitle = "Account Not Found";
@@ -118,7 +106,6 @@ export default function ForgotPassword() {
   return (
     <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
       <LinearGradient colors={["#FFCBD7", "#F8BBD9"]} className="flex-1">
-        {/* Background Image */}
         <View className="absolute inset-0">
           <Image
             source={require("@/assets/images/7.png")}

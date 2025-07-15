@@ -93,7 +93,6 @@ export default function TestPackagesScreen() {
 
   return (
     <ScrollView className="flex-1 bg-white">
-      {/* Header */}
       <View className="px-6 pt-6 pb-4">
         <View className="flex-row items-center justify-between mb-2">
           <Text className="text-2xl font-bold text-pink-400">
@@ -175,7 +174,6 @@ export default function TestPackagesScreen() {
           })}
         </View>
 
-        {/* Bottom spacing */}
         <View className="h-6" />
       </View>
     </ScrollView>

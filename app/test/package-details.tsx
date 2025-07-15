@@ -71,7 +71,7 @@ export default function PackageDetailsPage() {
         packageName.toLowerCase().includes(p.name.toLowerCase()) ||
         p.name.toLowerCase().includes(packageName.toLowerCase())
     );
-    return pkg || packages[0]; // Default to first package style
+    return pkg || packages[0];
   };
 
   const formatPrice = (price: number) => {
@@ -130,20 +130,17 @@ export default function PackageDetailsPage() {
       </View>
 
       <ScrollView className="flex-1 px-6 py-6">
-        {/* Package Card */}
         <LinearGradient
           colors={packageStyle.colors as [string, string]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           className="relative rounded-2xl p-6 shadow-lg overflow-hidden mb-6"
         >
-          {/* Background Pattern */}
           <View className="absolute inset-0 opacity-10">
             <View className="absolute -top-4 -right-4 w-24 h-24 bg-white rounded-full" />
             <View className="absolute -bottom-4 -left-4 w-16 h-16 bg-white rounded-full" />
           </View>
 
-          {/* Badge */}
           <View className="absolute top-4 left-4">
             <View
               className={`${packageStyle.badgeColor} px-3 py-1 rounded-full`}
@@ -152,7 +149,6 @@ export default function PackageDetailsPage() {
             </View>
           </View>
 
-          {/* Content */}
           <View className="relative mt-8">
             <View className="flex-row justify-between items-start mb-4">
               <View className="flex-1">
@@ -171,7 +167,6 @@ export default function PackageDetailsPage() {
               </View>
             </View>
 
-            {/* Action Buttons */}
             <View className="flex-row gap-3 mt-2">
               <TouchableOpacity
                 onPress={() => router.push("/test/all-tests" as any)}
@@ -190,7 +185,6 @@ export default function PackageDetailsPage() {
           </View>
         </LinearGradient>
 
-        {/* Package Information */}
         <View className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <Text className="text-lg font-bold text-gray-900 mb-4">
             Package Information
@@ -263,11 +257,9 @@ export default function PackageDetailsPage() {
           </View>
         )}
 
-        {/* Bottom spacing */}
         <View className="h-10" />
       </ScrollView>
 
-      {/* Bottom Action Button */}
       <View className="bg-white border-t border-gray-200 p-6">
         <TouchableOpacity onPress={handleBookNow}>
           <LinearGradient

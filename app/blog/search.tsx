@@ -20,7 +20,6 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Normalize Unicode for Vietnamese text comparison
   const normalizeString = useCallback((str: string) => {
     return str
       .normalize("NFD")
@@ -29,14 +28,12 @@ export default function SearchPage() {
       .trim();
   }, []);
 
-  // Debounce timer
   const [debounceTimer, setDebounceTimer] = useState<number | null>(null);
 
   useEffect(() => {
     loadBlogs();
   }, []);
 
-  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (debounceTimer) {
@@ -61,14 +58,10 @@ export default function SearchPage() {
     }
   };
 
-  // Debounced search function to prevent crash when typing Vietnamese quickly
   const performSearch = useCallback(
     (query: string) => {
-      // Prevent search if blogs not loaded yet
       if (!allBlogs.length) return;
-
       const normalizedQuery = normalizeString(query);
-
       if (normalizedQuery === "") {
         setSearchResults([]);
       } else {
@@ -95,12 +88,10 @@ export default function SearchPage() {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
 
-    // Clear previous timer
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
 
-    // Set new timer for debounced search
     const timer = setTimeout(() => {
       performSearch(query);
     }, 300) as unknown as number;

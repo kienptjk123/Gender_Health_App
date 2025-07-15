@@ -10,7 +10,6 @@ export default function PaymentSuccess() {
   return (
     <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
       <LinearGradient colors={["#FFCBD7", "#F8BBD9"]} className="flex-1">
-        {/* Background Image */}
         <View className="absolute inset-0">
           <Image
             source={require("@/assets/images/7.png")}
@@ -19,15 +18,12 @@ export default function PaymentSuccess() {
           />
         </View>
 
-        {/* Content Overlay */}
         <View className="flex-1 items-center justify-center px-6">
           <View className="bg-white/95 rounded-3xl px-8 py-8 shadow-2xl w-full max-w-md">
-            {/* Success Icon */}
             <View className="bg-green-100 p-6 rounded-full mb-6 self-center">
               <Ionicons name="checkmark-circle" size={60} color="#10b981" />
             </View>
 
-            {/* Success Message */}
             <Text className="text-2xl font-bold text-gray-800 text-center mb-4">
               Payment Successful!
             </Text>
@@ -37,7 +33,6 @@ export default function PaymentSuccess() {
               confirmation email shortly.
             </Text>
 
-            {/* Action Buttons */}
             <View className="space-y-3 mb-4">
               <TouchableOpacity
                 className="bg-[#f9a8d4] py-4 rounded-2xl"
@@ -49,7 +44,6 @@ export default function PaymentSuccess() {
               </TouchableOpacity>
             </View>
 
-            {/* Celebration Message */}
             <View className="bg-green-50/80 p-4 rounded-2xl">
               <Text className="text-green-700 font-medium text-center">
                 🎉 Thank you for choosing our service! 🎉

@@ -31,7 +31,6 @@ export default function AllTestsPage() {
     [key: string]: boolean;
   }>({});
 
-  // Debounce timer for toggle function
   const [debounceTimer, setDebounceTimer] = useState<number | null>(null);
 
   const packages = useMemo(
@@ -68,7 +67,6 @@ export default function AllTestsPage() {
     fetchData();
   }, []);
 
-  // Cleanup debounce timer on unmount
   useEffect(() => {
     return () => {
       if (debounceTimer) {
@@ -92,10 +90,9 @@ export default function AllTestsPage() {
       setTestPackages(packagesResponse.data || []);
       setTypeOfTests(typesResponse.data || []);
 
-      // Initialize expanded sections
       const initialExpanded: { [key: string]: boolean } = {};
       typesResponse.data?.forEach((typeOfTest, index) => {
-        initialExpanded[typeOfTest.name] = index === 0; // Expand first section only
+        initialExpanded[typeOfTest.name] = index === 0;
       });
       console.log("Initial expanded sections:", initialExpanded);
       setExpandedSections(initialExpanded);
@@ -140,28 +137,16 @@ export default function AllTestsPage() {
 
   const toggleSection = useCallback(
     (sectionName: string) => {
-      console.log("=== Toggle Section Debug ===");
-      console.log("Toggling section:", sectionName);
-      console.log("Available typeOfTests:", typeOfTests?.length || 0);
-      console.log("Available testPackages:", testPackages?.length || 0);
-      console.log("Current expanded sections:", expandedSections);
-      console.log("Router available:", !!router);
-
-      // Prevent toggle if data not ready
       if (!typeOfTests.length || !testPackages.length) {
         console.warn("Data not ready, skipping toggle");
         return;
       }
 
-      // Clear previous debounce timer
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
-
-      // Debounce the toggle operation
       const timer = setTimeout(() => {
         try {
-          // Use InteractionManager to prevent UI blocking
           InteractionManager.runAfterInteractions(() => {
             console.log("Executing toggle for:", sectionName);
             setExpandedSections((prev) => {
@@ -176,7 +161,7 @@ export default function AllTestsPage() {
         } catch (error) {
           console.error("Toggle section error:", error);
         }
-      }, 100) as unknown as number; // 100ms debounce
+      }, 100) as unknown as number;
 
       setDebounceTimer(timer);
     },
@@ -192,7 +177,6 @@ export default function AllTestsPage() {
     );
   }
 
-  // Prevent render if data not loaded yet
   if (!testPackages.length || !typeOfTests.length) {
     return (
       <View className="flex-1 bg-pink-50 justify-center items-center">
@@ -210,7 +194,6 @@ export default function AllTestsPage() {
 
   return (
     <View className="flex-1 bg-pink-50">
-      {/* Header */}
       <View className="bg-white shadow-sm pt-12 pb-4">
         <View className="px-6">
           <View className="flex-row items-center gap-3">
