@@ -1,39 +1,55 @@
 import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import React from "react";
-import { Animated, Text, TouchableOpacity, View } from "react-native";
+import {
+  Animated,
+  Text,
+  TouchableOpacity,
+  View,
+  Dimensions,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const TabIcon = ({
   iconName,
   iconFamily,
   name,
   focused,
+  animatedValue,
 }: {
   iconName: string;
   iconFamily: "Ionicons" | "MaterialIcons" | "FontAwesome5";
   name: string;
   focused: boolean;
+  animatedValue: Animated.Value;
 }) => {
-  const scale = React.useRef(new Animated.Value(1)).current;
-  const translateY = React.useRef(new Animated.Value(0)).current;
+  // Interpolate values for smooth animation
+  const scale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.1],
+  });
 
-  React.useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: focused ? 1.1 : 1,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 10,
-      }),
-      Animated.spring(translateY, {
-        toValue: focused ? -1 : 0,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 10,
-      }),
-    ]).start();
-  }, [focused, scale, translateY]);
+  const translateY = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -2],
+  });
+
+  const iconOpacity = animatedValue.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.6, 0.8, 1],
+  });
+
+  const backgroundScale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.8, 1],
+  });
+
+  const textScale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.9, 1],
+  });
 
   const getIconComponent = () => {
     const iconProps = {
@@ -59,23 +75,28 @@ const TabIcon = ({
       <Animated.View
         style={{
           transform: [{ scale }, { translateY }],
+          opacity: iconOpacity,
         }}
         className="items-center"
       >
-        <View
-          className={`w-8 h-8 rounded-xl items-center justify-center ${
-            focused ? "bg-pink-400" : "bg-transparent"
-          }`}
+        <Animated.View
+          style={{
+            transform: [{ scale: backgroundScale }],
+            backgroundColor: focused ? "#f472b6" : "transparent",
+          }}
+          className="w-10 h-10 rounded-xl items-center justify-center"
         >
           {getIconComponent()}
-        </View>
-        <Text
-          className={`text-xs font-medium ${
-            focused ? "text-pink-500" : "text-gray-500"
-          }`}
+        </Animated.View>
+        <Animated.Text
+          style={{
+            transform: [{ scale: textScale }],
+            color: focused ? "#ec4899" : "#6b7280",
+          }}
+          className="text-xs font-medium"
         >
           {name}
-        </Text>
+        </Animated.Text>
       </Animated.View>
     </View>
   );
@@ -123,6 +144,93 @@ export default function BottomTabs() {
     },
   ];
 
+  // Animation values for each tab
+  const tabAnimations = React.useRef(
+    tabs.map(() => new Animated.Value(0))
+  ).current;
+
+  // Sliding indicator animation
+  const slideAnimation = React.useRef(new Animated.Value(0)).current;
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  // Press feedback animations
+  const pressAnimations = React.useRef(
+    tabs.map(() => new Animated.Value(1))
+  ).current;
+
+  // Update animations when pathname changes
+  React.useEffect(() => {
+    const currentIndex = tabs.findIndex((tab) => tab.isActive);
+    if (currentIndex !== -1 && currentIndex !== activeIndex) {
+      const previousIndex = activeIndex;
+      setActiveIndex(currentIndex);
+
+      // Animate slide indicator with smooth spring
+      Animated.spring(slideAnimation, {
+        toValue: currentIndex,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 8,
+      }).start();
+
+      // Animate out previous tab
+      if (previousIndex !== -1) {
+        Animated.timing(tabAnimations[previousIndex], {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      }
+
+      // Animate in new tab with stagger effect
+      const delay = Math.abs(currentIndex - previousIndex) * 50;
+      setTimeout(() => {
+        Animated.spring(tabAnimations[currentIndex], {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 120,
+          friction: 8,
+        }).start();
+      }, delay);
+    }
+  }, [pathname, activeIndex, tabs, tabAnimations, slideAnimation]);
+
+  // Initialize animations
+  React.useEffect(() => {
+    const currentIndex = tabs.findIndex((tab) => tab.isActive);
+    if (currentIndex !== -1) {
+      setActiveIndex(currentIndex);
+      slideAnimation.setValue(currentIndex);
+      tabAnimations[currentIndex].setValue(1);
+    }
+  }, []);
+
+  const handleTabPress = (route: string, index: number) => {
+    // Press feedback animation
+    Animated.sequence([
+      Animated.timing(pressAnimations[index], {
+        toValue: 0.85,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(pressAnimations[index], {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Navigate
+    router.push(route as any);
+  };
+
+  // Calculate indicator position
+  const tabWidth = SCREEN_WIDTH / tabs.length;
+  const indicatorTranslateX = slideAnimation.interpolate({
+    inputRange: tabs.map((_, index) => index),
+    outputRange: tabs.map((_, index) => index * tabWidth),
+  });
+
   return (
     <View
       style={{
@@ -133,7 +241,6 @@ export default function BottomTabs() {
         paddingBottom: Math.max(insets.bottom, 3),
         paddingTop: 3,
         paddingHorizontal: 16,
-        flexDirection: "row",
         shadowColor: "#000",
         shadowOffset: {
           width: 0,
@@ -142,22 +249,34 @@ export default function BottomTabs() {
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 3,
+        position: "relative",
       }}
     >
-      {tabs.map((tab, index) => (
-        <TouchableOpacity
-          key={index}
-          onPress={() => router.push(tab.route as any)}
-          className="flex-1"
-        >
-          <TabIcon
-            iconName={tab.iconName}
-            iconFamily={tab.iconFamily}
-            name={tab.name}
-            focused={tab.isActive}
-          />
-        </TouchableOpacity>
-      ))}
+      <View style={{ flexDirection: "row", flex: 1 }}>
+        {tabs.map((tab, index) => (
+          <Animated.View
+            key={index}
+            style={{
+              flex: 1,
+              transform: [{ scale: pressAnimations[index] }],
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => handleTabPress(tab.route, index)}
+              style={{ flex: 1 }}
+              activeOpacity={0.7}
+            >
+              <TabIcon
+                iconName={tab.iconName}
+                iconFamily={tab.iconFamily}
+                name={tab.name}
+                focused={tab.isActive}
+                animatedValue={tabAnimations[index]}
+              />
+            </TouchableOpacity>
+          </Animated.View>
+        ))}
+      </View>
     </View>
   );
 }

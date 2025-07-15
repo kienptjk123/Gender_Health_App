@@ -2,6 +2,7 @@ import { questionApi, replyApi, voteApi } from "@/apis/forum";
 import { SafeArea } from "@/components/SafeArea";
 import { useAuth } from "@/contexts/AuthContext";
 import { QuestionData, ReplyData } from "@/models/forum";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -228,11 +229,11 @@ export default function QuestionDetailPage() {
 
     try {
       setSubmittingReply(true);
-
       // Create reply using API
       const newReply = await replyApi.create({
         content: replyText.trim(),
-        questionId: question.id,
+        author_type: "CUSTOMER",
+        question_id: question.id,
       });
 
       setReplies((prev) => [...prev, newReply]);
@@ -315,7 +316,7 @@ export default function QuestionDetailPage() {
               onPress={() => router.back()}
               className="p-2 -ml-2 mr-2 rounded-full active:bg-gray-100"
             >
-              <Text className="text-pink-400 text-lg">←</Text>
+              <Ionicons name="arrow-back" size={24} color="#EC4899" />
             </TouchableOpacity>
             <View className="flex-1">
               <Text className="text-lg font-bold text-pink-400">

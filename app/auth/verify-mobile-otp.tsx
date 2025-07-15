@@ -90,32 +90,21 @@ export default function VerifyMobileOTP() {
         visibilityTime: 3000,
       });
 
-      // Navigate to login page after successful verification
       setTimeout(() => {
-        console.log("🔄 Navigating to login page");
         router.replace("/auth/login");
       }, 1500);
     } catch (error: any) {
-      console.error("❌ Mobile OTP verification error:", error);
-      console.error("📊 Error type:", typeof error);
-      console.error("🔍 Error details:", JSON.stringify(error, null, 2));
-
       let errorMessage = "OTP verification failed. Please try again.";
       let errorTitle = "Verification Failed";
 
-      // Handle different error types
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
-        console.log("📝 Using API error message:", errorMessage);
       } else if (error?.message) {
         errorMessage = error.message;
-        console.log("📝 Using error message:", errorMessage);
       } else if (error?.error) {
         errorMessage = error.error;
-        console.log("📝 Using error field:", errorMessage);
       }
 
-      // Special handling for common OTP errors
       if (errorMessage.toLowerCase().includes("invalid")) {
         errorTitle = "Invalid OTP";
       } else if (errorMessage.toLowerCase().includes("expired")) {
@@ -130,9 +119,6 @@ export default function VerifyMobileOTP() {
         position: "top",
         visibilityTime: 5000,
       });
-
-      // Don't navigate away on error - let user try again
-      console.log("🔄 Staying on verification page for retry");
     } finally {
       setLoading(false);
     }

@@ -111,7 +111,6 @@ export default function PackageDetailsPage() {
 
   return (
     <View className="flex-1 bg-pink-50 pt-9">
-      {/* Header */}
       <View className="bg-white shadow-sm py-4">
         <View className="px-6">
           <View className="flex-row items-center justify-center gap-3">

@@ -60,7 +60,6 @@ export default function ForgotPassword() {
         visibilityTime: 4000,
       });
 
-      // Navigate to OTP verification page
       setTimeout(() => {
         try {
           router.push({
@@ -70,14 +69,7 @@ export default function ForgotPassword() {
               type: "forgot-password",
             },
           });
-          console.log(
-            "✅ Navigation to OTP verification completed successfully"
-          );
         } catch (navigationError) {
-          console.error(
-            "⚠️ Navigation method 1 failed, trying alternative:",
-            navigationError
-          );
           router.push(
             `/auth/otp-verification?email=${encodeURIComponent(
               data.email.trim()
