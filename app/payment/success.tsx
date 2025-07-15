@@ -1,9 +1,8 @@
-import React from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
-import { useRouter } from "expo-router";
+import { SafeArea } from "@/components/SafeArea";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { SafeArea } from "@/components/SafeArea";
+import { useRouter } from "expo-router";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 export default function PaymentSuccess() {
   const router = useRouter();
@@ -46,15 +45,6 @@ export default function PaymentSuccess() {
               >
                 <Text className="text-white text-center font-semibold text-lg">
                   Go to Home
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="border-2 border-pink-200 py-4 rounded-2xl bg-white/50"
-                onPress={() => router.push("/(tabs)/profile")}
-              >
-                <Text className="text-gray-700 text-center font-semibold text-lg">
-                  View My Bookings
                 </Text>
               </TouchableOpacity>
             </View>
