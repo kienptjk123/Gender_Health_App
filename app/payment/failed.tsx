@@ -11,7 +11,6 @@ export default function PaymentFailed() {
   return (
     <SafeArea backgroundColor="#FFCBD7" statusBarStyle="light-content">
       <LinearGradient colors={["#FFCBD7", "#F8BBD9"]} className="flex-1">
-        {/* Background Image */}
         <View className="absolute inset-0">
           <Image
             source={require("@/assets/images/7.png")}
@@ -20,15 +19,12 @@ export default function PaymentFailed() {
           />
         </View>
 
-        {/* Content Overlay */}
         <View className="flex-1 items-center justify-center px-6">
           <View className="bg-white/95 rounded-3xl px-8 py-8 shadow-2xl w-full max-w-md">
-            {/* Error Icon */}
             <View className="bg-red-100 p-6 rounded-full mb-6 self-center">
               <Ionicons name="close-circle" size={60} color="#ef4444" />
             </View>
 
-            {/* Error Message */}
             <Text className="text-2xl font-bold text-gray-800 text-center mb-4">
               Payment Failed
             </Text>
@@ -50,7 +46,6 @@ export default function PaymentFailed() {
               </TouchableOpacity>
             </View>
 
-            {/* Help Section */}
             <View className="bg-pink-50/80 p-4 rounded-2xl">
               <Text className="text-gray-700 font-medium mb-2 text-center">
                 Need Help?

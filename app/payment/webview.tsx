@@ -16,9 +16,7 @@ export default function VnpayWebview() {
       responseCode === "00"
     ) {
       router.replace("/payment/success");
-    }
-    // Check for failed payment (any response code other than 00)
-    else if (
+    } else if (
       url.includes("https://genderhealth.io.vn/payment/failed") ||
       (responseCode && responseCode !== "00")
     ) {

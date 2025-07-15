@@ -26,7 +26,6 @@ export default function BlogTab() {
   const fetchBlogs = async () => {
     try {
       setLoading(true);
-      // Call page 1 for featured blogs
       const [featuredResponse, popularResponse] = await Promise.all([
         blogApi.getAll(1, 5),
         blogApi.getAll(2, 5),
@@ -35,15 +34,8 @@ export default function BlogTab() {
       setFeaturedBlogs(featuredResponse);
       setPopularBlogs(popularResponse);
       setFilteredBlogs(popularResponse);
-      console.log(
-        "✅ Fetched",
-        featuredResponse.length,
-        "featured blogs and",
-        popularResponse.length,
-        "popular blogs"
-      );
     } catch (error) {
-      console.error("❌ Error fetching blogs:", error);
+      console.error("Error fetching blogs:", error);
     } finally {
       setLoading(false);
     }
@@ -130,7 +122,6 @@ export default function BlogTab() {
   return (
     <View className="flex-1 bg-white">
       <ScrollView className="flex-1">
-        {/* Header */}
         <View className="bg-white px-6 py-4 shadow-sm">
           <View className="flex-row justify-between items-center mb-4">
             <View className="flex-row items-center">
@@ -148,7 +139,6 @@ export default function BlogTab() {
             </TouchableOpacity>
           </View>
 
-          {/* Search Bar */}
           <TouchableOpacity
             onPress={() => router.push("/blog/search")}
             className="flex-row items-center bg-pink-50 rounded-2xl px-4 py-3 border border-pink-200"
@@ -177,12 +167,10 @@ export default function BlogTab() {
             </View>
           )}
 
-          {/* Popular Section */}
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-xl font-bold text-pink-400">Recommended</Text>
           </View>
 
-          {/* Popular Articles */}
           <View className="space-y-4">
             {filteredBlogs.map((blog, index) => (
               <TouchableOpacity
@@ -233,7 +221,6 @@ export default function BlogTab() {
             ))}
           </View>
 
-          {/* No articles state */}
           {filteredBlogs.length === 0 && !loading && (
             <View className="bg-white rounded-3xl p-8 shadow-sm border border-pink-100 items-center mt-8">
               <View className="w-20 h-20 bg-pink-100 rounded-full items-center justify-center mb-4">
